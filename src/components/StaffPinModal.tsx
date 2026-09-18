@@ -5,7 +5,7 @@ import { getStaffPin, saveStaffPin } from '../utils/storage';
 interface StaffPinModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (rememberDevice?: boolean) => void;
 }
 
 export const StaffPinModal: React.FC<StaffPinModalProps> = ({
@@ -15,6 +15,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
 }) => {
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(true);
   const [error, setError] = useState('');
   const [isChangingPin, setIsChangingPin] = useState(false);
   const [newPin, setNewPin] = useState('');
@@ -35,7 +36,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
     if (pin.trim() === currentPin) {
       setError('');
       setPin('');
-      onSuccess();
+      onSuccess(rememberDevice);
     } else {
       setError('PIN incorrecto. Acceso exclusivo al cuerpo técnico.');
     }
@@ -115,7 +116,10 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                 <div className="relative">
                   <input
                     id="staff-pin-input"
+                    name="staff-pin"
                     type={showPin ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    inputMode="numeric"
                     value={pin}
                     onChange={(e) => {
                       setPin(e.target.value);
@@ -137,8 +141,33 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                 {error && (
                   <p className="text-xs text-red-600 font-semibold mt-1.5">{error}</p>
                 )}
-                <p className="text-[11px] text-slate-500 mt-2">
-                  PIN por defecto del cuerpo técnico: <strong className="text-slate-800">1234</strong>
+
+                {/* Persistent session toggle for mobile and web */}
+                <label className="flex items-start gap-2.5 mt-3 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 cursor-pointer select-none transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={rememberDevice}
+                    onChange={(e) => setRememberDevice(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded text-red-600 focus:ring-red-500 border-slate-300 cursor-pointer shrink-0"
+                  />
+                  <div className="text-xs text-slate-700">
+                    <span className="font-bold">Recordar acceso en este dispositivo</span>
+                    <p className="text-[11px] text-slate-500 font-normal leading-tight mt-0.5">
+                      Mantiene la sesión iniciada al abrir la aplicación en tu móvil o navegador.
+                    </p>
+                  </div>
+                </label>
+
+                <p className="text-[11px] text-slate-500 mt-2.5 text-center">
+                  {currentPin === '1234' ? (
+                    <>
+                      PIN por defecto del cuerpo técnico: <strong className="text-slate-800 font-mono">1234</strong>
+                    </>
+                  ) : (
+                    <span className="text-emerald-700 font-medium">
+                      ✓ PIN personalizado activo (sincronizado con la nube)
+                    </span>
+                  )}
                 </p>
               </div>
 

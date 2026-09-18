@@ -80,6 +80,7 @@ export async function checkSupabaseConnection(): Promise<SupabaseStatus> {
     const { data, error, count } = await supabase
       .from('players')
       .select('id', { count: 'exact' })
+      .neq('id', '__club_config__')
       .limit(10);
 
     if (error) {
@@ -126,6 +127,7 @@ export async function fetchPlayersFromSupabase(): Promise<{ players: PlayerData[
     const { data, error } = await supabase
       .from('players')
       .select('*')
+      .neq('id', '__club_config__')
       .order('submitted_at', { ascending: false });
 
     if (error) {
@@ -253,8 +255,61 @@ export async function saveClubProfileToSupabase(profile: ClubProfile): Promise<b
       crest_url: profile.crestUrl,
       updated_at: new Date().toISOString(),
     });
+    // Also save into club config fallback
+    await saveClubConfigToSupabase({ clubProfile: profile }).catch(() => {});
     return !error;
   } catch {
+    return false;
+  }
+}
+
+/**
+ * Universal Club and Security Config in Supabase
+ * Synchronizes Staff PIN and Club Profile across Mobile and Web
+ */
+export async function fetchClubConfigFromSupabase(): Promise<{
+  staffPin?: string;
+  clubProfile?: ClubProfile;
+} | null> {
+  if (!IS_SUPABASE_CONNECTED) return null;
+  try {
+    const { data, error } = await supabase
+      .from('players')
+      .select('data')
+      .eq('id', '__club_config__')
+      .maybeSingle();
+
+    if (error || !data || !data.data) return null;
+    return {
+      staffPin: data.data.staffPin,
+      clubProfile: data.data.clubProfile,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function saveClubConfigToSupabase(config: {
+  staffPin?: string;
+  clubProfile?: ClubProfile;
+}): Promise<boolean> {
+  if (!IS_SUPABASE_CONNECTED) return true;
+  try {
+    const existing = await fetchClubConfigFromSupabase();
+    const payload = {
+      id: '__club_config__',
+      full_name: 'Configuración del Club',
+      submitted_at: new Date().toISOString(),
+      staff_notes: 'Sistema - Configuración de PIN y Club',
+      data: {
+        staffPin: config.staffPin ?? existing?.staffPin ?? '1234',
+        clubProfile: config.clubProfile ?? existing?.clubProfile ?? null,
+      },
+    };
+    const { error } = await supabase.from('players').upsert(payload, { onConflict: 'id' });
+    return !error;
+  } catch (err) {
+    console.error('Error saving club config to Supabase:', err);
     return false;
   }
 }

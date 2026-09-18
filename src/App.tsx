@@ -24,6 +24,10 @@ import {
   saveClubProfile,
   syncPlayersWithSupabase,
   syncClubProfileWithSupabase,
+  isStaffSessionActive,
+  setStaffSessionActive,
+  clearStaffSession,
+  syncStaffConfigWithSupabase,
 } from './utils/storage';
 import { ConfirmModal } from './components/ConfirmModal';
 import { ArrowLeft, ArrowRight, Shield, Check, RotateCcw, Lock, UserCheck, X } from 'lucide-react';
@@ -42,11 +46,7 @@ export default function App() {
   const [clubProfile, setClubProfile] = useState<ClubProfile>(DEFAULT_CLUB_PROFILE);
   const [isClubModalOpen, setIsClubModalOpen] = useState(false);
   const [isStaffAuthenticated, setIsStaffAuthenticated] = useState<boolean>(() => {
-    try {
-      return sessionStorage.getItem('ficha_inicial_staff_auth') === 'true';
-    } catch {
-      return false;
-    }
+    return isStaffSessionActive();
   });
   const [isStaffPinModalOpen, setIsStaffPinModalOpen] = useState(false);
 
@@ -65,6 +65,11 @@ export default function App() {
     syncClubProfileWithSupabase().then((syncedProfile) => {
       if (syncedProfile) {
         setClubProfile(syncedProfile);
+      }
+    });
+    syncStaffConfigWithSupabase().then(({ clubProfile: cp }) => {
+      if (cp) {
+        setClubProfile(cp);
       }
     });
 
@@ -320,11 +325,9 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleStaffPinSuccess = () => {
+  const handleStaffPinSuccess = (rememberDevice: boolean = true) => {
     setIsStaffAuthenticated(true);
-    try {
-      sessionStorage.setItem('ficha_inicial_staff_auth', 'true');
-    } catch {}
+    setStaffSessionActive(rememberDevice);
     setIsStaffPinModalOpen(false);
     setActiveView('STAFF');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -332,9 +335,7 @@ export default function App() {
 
   const handleLockStaff = () => {
     setIsStaffAuthenticated(false);
-    try {
-      sessionStorage.removeItem('ficha_inicial_staff_auth');
-    } catch {}
+    clearStaffSession();
     setActiveView('FORM');
     setToastMessage('Sesión del Cuerpo Técnico cerrada y panel protegido.');
     setTimeout(() => setToastMessage(null), 3000);

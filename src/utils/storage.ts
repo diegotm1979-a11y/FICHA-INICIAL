@@ -6,6 +6,8 @@ import {
   fetchPlayersFromSupabase,
   saveClubProfileToSupabase,
   fetchClubProfileFromSupabase,
+  fetchClubConfigFromSupabase,
+  saveClubConfigToSupabase,
 } from './supabase';
 
 const PLAYERS_STORAGE_KEY = 'ficha_inicial_temporada_players_v1';
@@ -180,8 +182,55 @@ export function saveClubProfile(profile: ClubProfile): void {
   }
 }
 
+export const STAFF_AUTH_KEY = 'ficha_inicial_staff_auth_v1';
 const STAFF_PIN_KEY = 'ficha_inicial_staff_pin_v1';
 export const DEFAULT_STAFF_PIN = '1234';
+
+/**
+ * Checks if the staff session is authenticated in either localStorage or sessionStorage
+ */
+export function isStaffSessionActive(): boolean {
+  try {
+    return (
+      localStorage.getItem(STAFF_AUTH_KEY) === 'true' ||
+      localStorage.getItem('ficha_inicial_staff_auth') === 'true' ||
+      sessionStorage.getItem(STAFF_AUTH_KEY) === 'true' ||
+      sessionStorage.getItem('ficha_inicial_staff_auth') === 'true'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Persists staff session so mobile does not lose authentication on backgrounding or closing
+ */
+export function setStaffSessionActive(persistent: boolean = true): void {
+  try {
+    if (persistent) {
+      localStorage.setItem(STAFF_AUTH_KEY, 'true');
+      localStorage.setItem('ficha_inicial_staff_auth', 'true');
+    }
+    sessionStorage.setItem(STAFF_AUTH_KEY, 'true');
+    sessionStorage.setItem('ficha_inicial_staff_auth', 'true');
+  } catch (err) {
+    console.warn('Could not save staff session:', err);
+  }
+}
+
+/**
+ * Clears staff session on manual logout or lock
+ */
+export function clearStaffSession(): void {
+  try {
+    localStorage.removeItem(STAFF_AUTH_KEY);
+    localStorage.removeItem('ficha_inicial_staff_auth');
+    sessionStorage.removeItem(STAFF_AUTH_KEY);
+    sessionStorage.removeItem('ficha_inicial_staff_auth');
+  } catch (err) {
+    console.warn('Could not clear staff session:', err);
+  }
+}
 
 export function getStaffPin(): string {
   try {
@@ -194,8 +243,43 @@ export function getStaffPin(): string {
 export function saveStaffPin(pin: string): void {
   try {
     localStorage.setItem(STAFF_PIN_KEY, pin);
+    // Asynchronously synchronize PIN with Supabase so mobile and web stay in sync
+    saveClubConfigToSupabase({ staffPin: pin }).catch((err) => {
+      console.warn('Supabase PIN sync background error:', err);
+    });
   } catch (err) {
     console.error('Error saving staff PIN:', err);
+  }
+}
+
+/**
+ * Synchronizes staff PIN and club config with Supabase
+ */
+export async function syncStaffConfigWithSupabase(): Promise<{
+  staffPin: string;
+  clubProfile: ClubProfile;
+}> {
+  try {
+    const remote = await fetchClubConfigFromSupabase();
+    let currentPin = getStaffPin();
+    let currentProfile = getClubProfile();
+
+    if (remote?.staffPin && remote.staffPin.trim().length >= 4) {
+      localStorage.setItem(STAFF_PIN_KEY, remote.staffPin.trim());
+      currentPin = remote.staffPin.trim();
+    } else if (currentPin !== DEFAULT_STAFF_PIN) {
+      // If we have a local custom PIN, upload it to cloud so mobile receives it
+      saveClubConfigToSupabase({ staffPin: currentPin }).catch(() => {});
+    }
+
+    if (remote?.clubProfile && remote.clubProfile.clubName) {
+      localStorage.setItem(CLUB_PROFILE_STORAGE_KEY, JSON.stringify(remote.clubProfile));
+      currentProfile = remote.clubProfile;
+    }
+
+    return { staffPin: currentPin, clubProfile: currentProfile };
+  } catch (e) {
+    return { staffPin: getStaffPin(), clubProfile: getClubProfile() };
   }
 }
 
