@@ -25,8 +25,8 @@ export const Header: React.FC<HeaderProps> = ({
   isStaffAuthenticated = false,
   onLockStaff,
 }) => {
-  const clubName = clubProfile?.clubName || 'Ficha Inicial de Temporada';
-  const subheading = clubProfile?.subheading || 'Información y Compromiso del Futbolista · Cuerpo Técnico';
+  const clubName = (clubProfile?.clubName || '').trim();
+  const subheading = clubProfile?.subheading || 'Ficha Inicial de Temporada · Información y Compromiso';
   const crestUrl = clubProfile?.crestUrl;
 
   return (
@@ -63,21 +63,25 @@ export const Header: React.FC<HeaderProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight uppercase">
-                    {clubName}
+                    {clubName || 'Ficha Inicial de Temporada'}
                   </h1>
                   {onOpenClubEditor && (
                     <button
                       type="button"
                       onClick={onOpenClubEditor}
                       className="p-1 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                      title="Editar escudo y nombre del club"
+                      title={
+                        isStaffAuthenticated
+                          ? 'Editar nombre y escudo del club'
+                          : 'Editar nombre y escudo del club (Solo Cuerpo Técnico con PIN)'
+                      }
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
                   )}
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium line-clamp-1">
-                  {subheading}
+                  {clubName ? subheading : 'Información y Compromiso del Futbolista · Plantilla'}
                 </p>
               </div>
             </div>

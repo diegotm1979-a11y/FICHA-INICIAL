@@ -46,7 +46,7 @@ CREATE POLICY "Permitir eliminacion publica players" ON public.players
 -- 4. TABLA OPCIONAL PARA PERSONALIZACIÓN DEL CLUB
 CREATE TABLE IF NOT EXISTS public.club_profile (
   id TEXT PRIMARY KEY DEFAULT 'default',
-  club_name TEXT NOT NULL DEFAULT 'C.D. Laguna',
+  club_name TEXT NOT NULL DEFAULT '',
   subheading TEXT NOT NULL DEFAULT 'Ficha Inicial de Temporada',
   crest_url TEXT,
   updated_at TIMESTAMPTZ DEFAULT NOW()

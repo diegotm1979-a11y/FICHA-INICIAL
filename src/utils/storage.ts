@@ -164,8 +164,10 @@ export function getClubProfile(): ClubProfile {
     const raw = localStorage.getItem(CLUB_PROFILE_STORAGE_KEY);
     if (!raw) return DEFAULT_CLUB_PROFILE;
     const parsed = JSON.parse(raw);
+    const rawName = (parsed.clubName ?? '').trim();
+    const clubName = rawName === 'C.D. Laguna' ? '' : rawName;
     return {
-      clubName: parsed.clubName || DEFAULT_CLUB_PROFILE.clubName,
+      clubName,
       subheading: parsed.subheading || DEFAULT_CLUB_PROFILE.subheading,
       crestUrl: parsed.crestUrl || null,
     };
@@ -176,7 +178,13 @@ export function getClubProfile(): ClubProfile {
 
 export function saveClubProfile(profile: ClubProfile): void {
   try {
-    localStorage.setItem(CLUB_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    const sanitized = {
+      ...profile,
+      clubName: profile.clubName === 'C.D. Laguna' ? '' : (profile.clubName || '').trim(),
+    };
+    localStorage.setItem(CLUB_PROFILE_STORAGE_KEY, JSON.stringify(sanitized));
+    saveClubConfigToSupabase({ clubProfile: sanitized }).catch(() => {});
+    saveClubProfileToSupabase(sanitized).catch(() => {});
   } catch (err) {
     console.error('Error saving club profile:', err);
   }
@@ -272,9 +280,16 @@ export async function syncStaffConfigWithSupabase(): Promise<{
       saveClubConfigToSupabase({ staffPin: currentPin }).catch(() => {});
     }
 
-    if (remote?.clubProfile && remote.clubProfile.clubName) {
-      localStorage.setItem(CLUB_PROFILE_STORAGE_KEY, JSON.stringify(remote.clubProfile));
-      currentProfile = remote.clubProfile;
+    if (remote?.clubProfile) {
+      const rawClubName = (remote.clubProfile.clubName || '').trim();
+      const cleanName = rawClubName === 'C.D. Laguna' ? '' : rawClubName;
+      const profile: ClubProfile = {
+        clubName: cleanName,
+        subheading: remote.clubProfile.subheading || DEFAULT_CLUB_PROFILE.subheading,
+        crestUrl: remote.clubProfile.crestUrl || null,
+      };
+      localStorage.setItem(CLUB_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+      currentProfile = profile;
     }
 
     return { staffPin: currentPin, clubProfile: currentProfile };

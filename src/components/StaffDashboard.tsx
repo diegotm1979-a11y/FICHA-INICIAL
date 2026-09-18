@@ -34,6 +34,7 @@ interface StaffDashboardProps {
   onUpdatePlayers: (players: PlayerData[]) => void;
   onBackToPlayerForm: () => void;
   onLockStaff?: () => void;
+  onOpenClubEditor?: () => void;
 }
 
 export const StaffDashboard: React.FC<StaffDashboardProps> = ({
@@ -41,6 +42,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   onUpdatePlayers,
   onBackToPlayerForm,
   onLockStaff,
+  onOpenClubEditor,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPosition, setFilterPosition] = useState('ALL');
@@ -252,6 +254,19 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             <Download className="w-4 h-4 text-slate-600" />
             <span>Exportar CSV / Excel</span>
           </button>
+
+          {onOpenClubEditor && (
+            <button
+              type="button"
+              id="staff-open-club-editor"
+              onClick={onOpenClubEditor}
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+              title="Configurar nombre del club y escudo oficial"
+            >
+              <Shield className="w-4 h-4 text-red-600" />
+              <span>Nombre y Escudo</span>
+            </button>
+          )}
 
           <button
             type="button"

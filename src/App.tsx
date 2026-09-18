@@ -45,6 +45,7 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [clubProfile, setClubProfile] = useState<ClubProfile>(DEFAULT_CLUB_PROFILE);
   const [isClubModalOpen, setIsClubModalOpen] = useState(false);
+  const [pendingOpenClubEditor, setPendingOpenClubEditor] = useState(false);
   const [isStaffAuthenticated, setIsStaffAuthenticated] = useState<boolean>(() => {
     return isStaffSessionActive();
   });
@@ -329,7 +330,12 @@ export default function App() {
     setIsStaffAuthenticated(true);
     setStaffSessionActive(rememberDevice);
     setIsStaffPinModalOpen(false);
-    setActiveView('STAFF');
+    if (pendingOpenClubEditor) {
+      setPendingOpenClubEditor(false);
+      setIsClubModalOpen(true);
+    } else {
+      setActiveView('STAFF');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -344,6 +350,7 @@ export default function App() {
 
   const handleOpenClubEditor = () => {
     if (!isStaffAuthenticated) {
+      setPendingOpenClubEditor(true);
       setIsStaffPinModalOpen(true);
       return;
     }
@@ -382,6 +389,7 @@ export default function App() {
             onUpdatePlayers={setPlayers}
             onBackToPlayerForm={() => setActiveView('FORM')}
             onLockStaff={handleLockStaff}
+            onOpenClubEditor={handleOpenClubEditor}
           />
         </main>
       )}
@@ -563,7 +571,10 @@ export default function App() {
       {/* Staff Security PIN Modal (protects Staff Dashboard) */}
       <StaffPinModal
         isOpen={isStaffPinModalOpen}
-        onClose={() => setIsStaffPinModalOpen(false)}
+        onClose={() => {
+          setIsStaffPinModalOpen(false);
+          setPendingOpenClubEditor(false);
+        }}
         onSuccess={handleStaffPinSuccess}
       />
 

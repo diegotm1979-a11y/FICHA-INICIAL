@@ -174,7 +174,7 @@ export interface ClubProfile {
 }
 
 export const DEFAULT_CLUB_PROFILE: ClubProfile = {
-  clubName: 'Ficha Inicial de Temporada',
-  subheading: 'Información y Compromiso del Futbolista · Cuerpo Técnico',
+  clubName: '',
+  subheading: 'Ficha Inicial de Temporada · Cuerpo Técnico',
   crestUrl: null,
 };

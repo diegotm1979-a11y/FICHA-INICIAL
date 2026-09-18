@@ -244,7 +244,7 @@ export const SquadPdfModal: React.FC<SquadPdfModalProps> = ({
                   </div>
                   <div>
                     <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">
-                      {clubProfile.clubName}
+                      {clubProfile.clubName || 'Ficha Inicial de Temporada'}
                     </h1>
                     <p className="text-xs text-slate-500 font-medium">
                       {clubProfile.subheading}

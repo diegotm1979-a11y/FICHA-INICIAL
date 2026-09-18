@@ -86,16 +86,16 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
   };
 
   const handleResetToDefault = () => {
-    setClubName(DEFAULT_CLUB_PROFILE.clubName);
-    setSubheading(DEFAULT_CLUB_PROFILE.subheading);
+    setClubName('');
+    setSubheading('Ficha Inicial de Temporada · Cuerpo Técnico');
     setCrestUrl(null);
     setUploadError(null);
   };
 
   const handleSave = () => {
     onSave({
-      clubName: clubName.trim() || DEFAULT_CLUB_PROFILE.clubName,
-      subheading: subheading.trim() || DEFAULT_CLUB_PROFILE.subheading,
+      clubName: clubName.trim(),
+      subheading: subheading.trim() || 'Ficha Inicial de Temporada · Cuerpo Técnico',
       crestUrl,
     });
     onClose();
@@ -280,7 +280,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
                   type="text"
                   value={clubName}
                   onChange={(e) => setClubName(e.target.value)}
-                  placeholder="Ej: C.D. Numancia / Real Madrid C.F."
+                  placeholder="Escribe el nombre del club cuando lo desees..."
                   className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
                 />
               </div>

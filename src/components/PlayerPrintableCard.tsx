@@ -141,7 +141,7 @@ export const PlayerPrintableCard: React.FC<PlayerPrintableCardProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-              {clubProfile.clubName}
+              {clubProfile.clubName || 'Ficha Inicial de Temporada'}
             </h3>
             <p className="text-[11px] text-slate-500 font-medium">
               {clubProfile.subheading}
