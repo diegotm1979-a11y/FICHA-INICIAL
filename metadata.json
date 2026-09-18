@@ -1,0 +1,8 @@
+{
+  "name": "Ficha Inicial Temporada",
+  "description": "Aplicación web moderna y responsive para que los futbolistas completen su ficha inicial de temporada para el cuerpo técnico.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
