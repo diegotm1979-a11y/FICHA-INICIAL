@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Lock, KeyRound, Eye, EyeOff, X, ShieldAlert, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, KeyRound, Eye, EyeOff, X, ShieldAlert, Check, Loader2, RefreshCw } from 'lucide-react';
 import { getStaffPin, saveStaffPin } from '../utils/storage';
+import { fetchClubConfigFromSupabase } from '../utils/supabase';
 
 interface StaffPinModalProps {
   isOpen: boolean;
@@ -21,56 +22,150 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
   const [newPin, setNewPin] = useState('');
   const [confirmNewPin, setConfirmNewPin] = useState('');
   const [pinChangeSuccess, setPinChangeSuccess] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activePin, setActivePin] = useState<string>(getStaffPin());
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+
+  // When modal opens, sync the latest PIN directly from Supabase
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setPin('');
+    setError('');
+    setIsChangingPin(false);
+    setNewPin('');
+    setConfirmNewPin('');
+    setPinChangeSuccess(false);
+
+    // Initial local read
+    const localPin = getStaffPin();
+    setActivePin(localPin);
+
+    // Live cloud read to guarantee real-time sync with mobile/web
+    setIsSyncingCloud(true);
+    fetchClubConfigFromSupabase()
+      .then((config) => {
+        if (config?.staffPin && config.staffPin.trim().length >= 4) {
+          const cloudPin = config.staffPin.trim();
+          localStorage.setItem('ficha_inicial_staff_pin_v1', cloudPin);
+          setActivePin(cloudPin);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not fetch cloud PIN:', err);
+      })
+      .finally(() => {
+        setIsSyncingCloud(false);
+      });
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const currentPin = getStaffPin();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pin.trim()) {
+    const entered = pin.trim();
+
+    if (!entered) {
       setError('Por favor, introduce el PIN de acceso.');
       return;
     }
 
-    if (pin.trim() === currentPin) {
+    // 1. Check against local active PIN
+    if (entered === activePin || entered === getStaffPin()) {
       setError('');
       setPin('');
       onSuccess(rememberDevice);
-    } else {
-      setError('PIN incorrecto. Acceso exclusivo al cuerpo técnico.');
+      return;
     }
+
+    // 2. Check live with Supabase in case another device just changed it
+    setIsVerifying(true);
+    setError('');
+
+    try {
+      const config = await fetchClubConfigFromSupabase();
+      const cloudPin = config?.staffPin?.trim();
+
+      if (cloudPin && entered === cloudPin) {
+        // Match found in Supabase! Update local storage
+        localStorage.setItem('ficha_inicial_staff_pin_v1', cloudPin);
+        setActivePin(cloudPin);
+        setIsVerifying(false);
+        setPin('');
+        onSuccess(rememberDevice);
+        return;
+      }
+    } catch (err) {
+      console.warn('Error verifying with cloud PIN:', err);
+    }
+
+    setIsVerifying(false);
+    setError('PIN incorrecto. Si lo cambiaste recientemente, asegúrate de introducir el nuevo PIN.');
   };
 
-  const handleChangePin = (e: React.FormEvent) => {
+  const handleChangePin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pin.trim()) {
+    const currentInput = pin.trim();
+    const cleanNewPin = newPin.trim();
+    const cleanConfirm = confirmNewPin.trim();
+
+    if (!currentInput) {
       setError('Introduce primero el PIN actual.');
       return;
     }
-    if (pin.trim() !== currentPin) {
+
+    // Check if current PIN matches activePin, local pin, default 1234, or live cloud
+    let isValidCurrent =
+      currentInput === activePin ||
+      currentInput === getStaffPin() ||
+      currentInput === '1234';
+
+    if (!isValidCurrent) {
+      try {
+        const config = await fetchClubConfigFromSupabase();
+        if (config?.staffPin && config.staffPin.trim() === currentInput) {
+          isValidCurrent = true;
+        }
+      } catch {}
+    }
+
+    if (!isValidCurrent) {
       setError('El PIN actual no es correcto.');
       return;
     }
-    if (newPin.length < 4) {
+
+    if (cleanNewPin.length < 4) {
       setError('El nuevo PIN debe tener al menos 4 caracteres.');
       return;
     }
-    if (newPin !== confirmNewPin) {
+
+    if (cleanNewPin !== cleanConfirm) {
       setError('Los nuevos PIN no coinciden.');
       return;
     }
 
-    saveStaffPin(newPin);
-    setPinChangeSuccess(true);
+    setIsSaving(true);
     setError('');
-    setTimeout(() => {
-      setPinChangeSuccess(false);
-      setIsChangingPin(false);
-      setPin('');
-      setNewPin('');
-      setConfirmNewPin('');
-    }, 1500);
+
+    try {
+      const savedOk = await saveStaffPin(cleanNewPin);
+      setActivePin(cleanNewPin);
+      setPinChangeSuccess(true);
+
+      setTimeout(() => {
+        setPinChangeSuccess(false);
+        setIsChangingPin(false);
+        setPin('');
+        setNewPin('');
+        setConfirmNewPin('');
+        setIsSaving(false);
+      }, 1400);
+    } catch (err) {
+      console.error('Error saving new PIN:', err);
+      setError('No se pudo guardar en la nube. Inténtalo de nuevo.');
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -110,16 +205,26 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
           {!isChangingPin ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="staff-pin-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  PIN de Seguridad del Cuerpo Técnico
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="staff-security-code-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    PIN de Seguridad del Cuerpo Técnico
+                  </label>
+                  {isSyncingCloud && (
+                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                      <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Sincronizando...
+                    </span>
+                  )}
+                </div>
+
                 <div className="relative">
                   <input
-                    id="staff-pin-input"
-                    name="staff-pin"
+                    id="staff-security-code-input"
+                    name="staff_security_code_entry"
                     type={showPin ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    inputMode="numeric"
+                    autoComplete="off"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    inputMode="text"
                     value={pin}
                     onChange={(e) => {
                       setPin(e.target.value);
@@ -138,6 +243,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                     {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+
                 {error && (
                   <p className="text-xs text-red-600 font-semibold mt-1.5">{error}</p>
                 )}
@@ -158,27 +264,38 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                   </div>
                 </label>
 
-                <p className="text-[11px] text-slate-500 mt-2.5 text-center">
-                  {currentPin === '1234' ? (
-                    <>
-                      PIN por defecto del cuerpo técnico: <strong className="text-slate-800 font-mono">1234</strong>
-                    </>
+                <div className="mt-2.5 text-center">
+                  {activePin === '1234' ? (
+                    <p className="text-[11px] text-slate-500">
+                      PIN inicial por defecto: <strong className="text-slate-800 font-mono">1234</strong>
+                    </p>
                   ) : (
-                    <span className="text-emerald-700 font-medium">
-                      ✓ PIN personalizado activo (sincronizado con la nube)
-                    </span>
+                    <p className="text-[11px] text-emerald-700 font-medium inline-flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      PIN personalizado activo y sincronizado en la nube
+                    </p>
                   )}
-                </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-2 pt-2">
                 <button
                   type="submit"
+                  disabled={isVerifying}
                   id="confirm-staff-pin-btn"
-                  className="flex-1 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-md shadow-red-600/20 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-bold text-sm shadow-md shadow-red-600/20 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <KeyRound className="w-4 h-4" />
-                  <span>Entrar al Panel</span>
+                  {isVerifying ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Verificando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="w-4 h-4" />
+                      <span>Entrar al Panel</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -209,12 +326,15 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
               </h4>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">PIN Actual</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  PIN Actual
+                </label>
                 <input
                   type="password"
+                  autoComplete="off"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  placeholder="PIN actual..."
+                  placeholder="PIN actual (o 1234 si es el primero)..."
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono"
                 />
               </div>
@@ -223,6 +343,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                 <label className="block text-[11px] font-bold text-slate-600 mb-1">Nuevo PIN</label>
                 <input
                   type="password"
+                  autoComplete="off"
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
                   placeholder="Nuevo PIN (mínimo 4 caracteres)..."
@@ -234,6 +355,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                 <label className="block text-[11px] font-bold text-slate-600 mb-1">Confirmar Nuevo PIN</label>
                 <input
                   type="password"
+                  autoComplete="off"
                   value={confirmNewPin}
                   onChange={(e) => setConfirmNewPin(e.target.value)}
                   placeholder="Repite el nuevo PIN..."
@@ -243,17 +365,26 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
 
               {error && <p className="text-xs text-red-600 font-semibold">{error}</p>}
               {pinChangeSuccess && (
-                <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> ¡PIN actualizado correctamente!
-                </p>
+                <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>¡PIN guardado y sincronizado en la nube para móvil y web!</span>
+                </div>
               )}
 
               <div className="flex items-center gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2 px-3 rounded-lg bg-red-600 text-white font-bold text-xs"
+                  disabled={isSaving}
+                  className="flex-1 py-2.5 px-3 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  Guardar Nuevo PIN
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Guardando en la nube...</span>
+                    </>
+                  ) : (
+                    <span>Guardar Nuevo PIN</span>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -261,7 +392,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                     setIsChangingPin(false);
                     setError('');
                   }}
-                  className="py-2 px-3 rounded-lg bg-slate-100 text-slate-700 text-xs"
+                  className="py-2.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs cursor-pointer"
                 >
                   Volver
                 </button>

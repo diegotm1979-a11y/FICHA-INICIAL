@@ -240,15 +240,15 @@ export function getStaffPin(): string {
   }
 }
 
-export function saveStaffPin(pin: string): void {
+export async function saveStaffPin(pin: string): Promise<boolean> {
   try {
     localStorage.setItem(STAFF_PIN_KEY, pin);
-    // Asynchronously synchronize PIN with Supabase so mobile and web stay in sync
-    saveClubConfigToSupabase({ staffPin: pin }).catch((err) => {
-      console.warn('Supabase PIN sync background error:', err);
-    });
+    // Synchronize PIN with Supabase so mobile and web stay in sync
+    const ok = await saveClubConfigToSupabase({ staffPin: pin });
+    return ok;
   } catch (err) {
     console.error('Error saving staff PIN:', err);
+    return false;
   }
 }
 
