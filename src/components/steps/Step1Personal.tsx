@@ -1,6 +1,7 @@
 import React from 'react';
 import { PlayerData, FOOTBALL_POSITIONS } from '../../types';
 import { User, Phone, Mail, Heart, Baby, Shield, Hash } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface Step1Props {
   data: PlayerData;
@@ -9,12 +10,14 @@ interface Step1Props {
 }
 
 export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) => {
+  const { t, translatePosition } = useLanguage();
+
   return (
     <div className="space-y-6">
       <div className="border-b border-slate-200 pb-4">
         <h3 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
           <User className="w-6 h-6 text-red-600" />
-          Datos Personales y Familiares
+          {t.step1.title}
         </h3>
       </div>
 
@@ -22,7 +25,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
         {/* Nombre completo */}
         <div className="sm:col-span-2 space-y-2">
           <label htmlFor="fullName" className="block text-sm font-semibold text-slate-800">
-            Nombre completo <span className="text-red-600">*</span>
+            {t.step1.fullName} <span className="text-red-600">*</span>
           </label>
           <div className="relative">
             <input
@@ -31,7 +34,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
               name="fullName"
               value={data.fullName}
               onChange={(e) => onChange({ fullName: e.target.value })}
-              placeholder="Ej. Carlos Mendoza Gil"
+              placeholder={t.step1.fullNamePlaceholder}
               className={`w-full min-h-[48px] px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all shadow-2xs ${
                 errors.fullName
                   ? 'border-red-500 focus:ring-red-500/30'
@@ -45,7 +48,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
         {/* Apodo / Nombre deportivo */}
         <div className="space-y-2">
           <label htmlFor="nickname" className="block text-sm font-semibold text-slate-800">
-            Apodo / Nombre deportivo <span className="text-xs font-normal text-slate-500">(Opcional)</span>
+            {t.step1.nickname} <span className="text-xs font-normal text-slate-500">{t.common.optional}</span>
           </label>
           <input
             type="text"
@@ -53,7 +56,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
             name="nickname"
             value={data.nickname}
             onChange={(e) => onChange({ nickname: e.target.value })}
-            placeholder="Ej. Charlie, El Rayo"
+            placeholder={t.step1.nicknamePlaceholder}
             className="w-full min-h-[48px] px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 shadow-2xs"
           />
         </div>
@@ -63,7 +66,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
           <div className="space-y-2 col-span-1">
             <label htmlFor="dorsal" className="block text-sm font-semibold text-slate-800 flex items-center gap-1">
               <Hash className="w-3.5 h-3.5 text-red-600" />
-              Dorsal
+              {t.step1.dorsal}
             </label>
             <input
               type="text"
@@ -72,14 +75,14 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
               maxLength={3}
               value={data.dorsal || ''}
               onChange={(e) => onChange({ dorsal: e.target.value })}
-              placeholder="Ej. 10"
+              placeholder={t.step1.dorsalPlaceholder}
               className="w-full min-h-[48px] px-3 py-3 text-center bg-white border border-slate-300 rounded-xl text-slate-900 font-mono font-bold placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 shadow-2xs"
             />
           </div>
           <div className="space-y-2 col-span-2">
             <label htmlFor="position" className="block text-sm font-semibold text-slate-800 flex items-center gap-1">
               <Shield className="w-3.5 h-3.5 text-red-600" />
-              Posición habitual
+              {t.step1.position}
             </label>
             <select
               id="position"
@@ -90,7 +93,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
             >
               {FOOTBALL_POSITIONS.map((pos) => (
                 <option key={pos} value={pos} className="bg-white text-slate-900">
-                  {pos}
+                  {translatePosition(pos)}
                 </option>
               ))}
             </select>
@@ -101,7 +104,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
         <div className="space-y-2">
           <label htmlFor="phone" className="block text-sm font-semibold text-slate-800 flex items-center gap-1.5">
             <Phone className="w-4 h-4 text-red-600" />
-            Teléfono móvil <span className="text-red-600">*</span>
+            {t.step1.phone} <span className="text-red-600">*</span>
           </label>
           <input
             type="tel"
@@ -109,7 +112,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
             name="phone"
             value={data.phone}
             onChange={(e) => onChange({ phone: e.target.value })}
-            placeholder="Ej. +34 600 123 456"
+            placeholder={t.step1.phonePlaceholder}
             className={`w-full min-h-[48px] px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all shadow-2xs ${
               errors.phone
                 ? 'border-red-500 focus:ring-red-500/30'
@@ -123,7 +126,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-semibold text-slate-800 flex items-center gap-1.5">
             <Mail className="w-4 h-4 text-red-600" />
-            Dirección de correo electrónico <span className="text-red-600">*</span>
+            {t.step1.email} <span className="text-red-600">*</span>
           </label>
           <input
             type="email"
@@ -131,7 +134,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
             name="email"
             value={data.email}
             onChange={(e) => onChange({ email: e.target.value })}
-            placeholder="Ej. jugador@correo.com"
+            placeholder={t.step1.emailPlaceholder}
             className={`w-full min-h-[48px] px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all shadow-2xs ${
               errors.email
                 ? 'border-red-500 focus:ring-red-500/30'
@@ -146,7 +149,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-sm sm:text-base font-semibold text-slate-900 flex items-center gap-2">
               <Heart className="w-4 h-4 text-red-600" />
-              ¿Tienes pareja? <span className="text-red-600">*</span>
+              {t.step1.partnerQuestion} <span className="text-red-600">*</span>
             </span>
 
             <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -160,7 +163,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100 shadow-2xs'
                 }`}
               >
-                Sí
+                {t.common.yes}
               </button>
               <button
                 type="button"
@@ -172,7 +175,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100 hover:border-red-400 shadow-2xs'
                 }`}
               >
-                No
+                {t.common.no}
               </button>
             </div>
           </div>
@@ -184,15 +187,15 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-sm sm:text-base font-semibold text-slate-900 flex items-center gap-2">
               <Baby className="w-4 h-4 text-red-600" />
-              Hijos
+              {t.step1.childrenQuestion}
             </span>
 
             <div className="grid grid-cols-4 gap-2 self-start sm:self-auto">
               {[
-                { val: 0, label: '0' },
-                { val: 1, label: '1' },
-                { val: 2, label: '2' },
-                { val: 3, label: '3 o más' },
+                { val: 0, label: t.step1.childrenZero },
+                { val: 1, label: t.step1.childrenOne },
+                { val: 2, label: t.step1.childrenTwo },
+                { val: 3, label: t.step1.childrenThreePlus },
               ].map((opt) => {
                 const isSelected = data.childrenCount === opt.val;
                 return (
@@ -223,7 +226,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
           {data.childrenCount > 0 && (
             <div className="pt-3 border-t border-slate-200 space-y-2 animate-fadeIn">
               <label htmlFor="childrenAges" className="block text-sm font-semibold text-slate-800">
-                Edades de los hijos <span className="text-red-600">*</span>
+                {t.step1.childrenAges} <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -231,7 +234,7 @@ export const Step1Personal: React.FC<Step1Props> = ({ data, onChange, errors }) 
                 name="childrenAges"
                 value={data.childrenAges}
                 onChange={(e) => onChange({ childrenAges: e.target.value })}
-                placeholder="Ej. 3 y 6 años / 8 meses"
+                placeholder={t.step1.childrenAgesPlaceholder}
                 className={`w-full min-h-[48px] px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all shadow-2xs ${
                   errors.childrenAges
                     ? 'border-red-500 focus:ring-red-500/30'

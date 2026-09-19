@@ -1,6 +1,8 @@
 import React from 'react';
 import { Shield, Users, FileText, CheckCircle2, RotateCcw, Pencil, Camera, Lock, LogOut } from 'lucide-react';
 import { ClubProfile } from '../types';
+import { LanguageSelector } from './LanguageSelector';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeaderProps {
   activeView: 'FORM' | 'STAFF';
@@ -25,13 +27,14 @@ export const Header: React.FC<HeaderProps> = ({
   isStaffAuthenticated = false,
   onLockStaff,
 }) => {
+  const { t } = useLanguage();
   const clubName = (clubProfile?.clubName || '').trim();
-  const subheading = clubProfile?.subheading || 'Ficha Inicial de Temporada · Información y Compromiso';
+  const subheading = clubProfile?.subheading || t.header.defaultSheetSubtitle;
   const crestUrl = clubProfile?.crestUrl;
 
   return (
     <header className="bg-white/95 border-b-2 border-red-600 sticky top-0 z-40 backdrop-blur-md no-print shadow-sm">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Brand & Crest */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
@@ -42,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
                 id="header-edit-club-crest-btn"
                 onClick={onOpenClubEditor}
                 className="group relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-black shadow-md shadow-red-500/25 overflow-hidden transition-all hover:scale-105 active:scale-95 cursor-pointer ring-2 ring-transparent hover:ring-red-400 focus:outline-hidden"
-                title="Haz clic para cambiar el escudo del club"
+                title={t.header.changeCrestTitle}
               >
                 {crestUrl ? (
                   <img
@@ -63,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight uppercase">
-                    {clubName || 'Ficha Inicial de Temporada'}
+                    {clubName || t.header.defaultSheetTitle}
                   </h1>
                   {onOpenClubEditor && (
                     <button
@@ -72,8 +75,8 @@ export const Header: React.FC<HeaderProps> = ({
                       className="p-1 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                       title={
                         isStaffAuthenticated
-                          ? 'Editar nombre y escudo del club'
-                          : 'Editar nombre y escudo del club (Solo Cuerpo Técnico con PIN)'
+                          ? t.header.editClubTitle
+                          : t.header.editClubWithPinTitle
                       }
                     >
                       <Pencil className="w-3 h-3" />
@@ -81,31 +84,40 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium line-clamp-1">
-                  {clubName ? subheading : 'Información y Compromiso del Futbolista · Plantilla'}
+                  {clubName ? subheading : t.header.defaultSheetSubtitle}
                 </p>
               </div>
             </div>
 
-            {hasDraft && activeView === 'FORM' && onResetDraft && (
-              <button
-                type="button"
-                id="header-reset-draft-mobile"
-                onClick={onResetDraft}
-                className="sm:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-700 bg-red-50 border border-red-200 active:scale-95 transition-all"
-                title="Borrar borrador y empezar de cero"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reiniciar</span>
-              </button>
-            )}
+            {/* Mobile language & reset actions */}
+            <div className="flex items-center gap-2 sm:hidden">
+              <LanguageSelector />
+              {hasDraft && activeView === 'FORM' && onResetDraft && (
+                <button
+                  type="button"
+                  id="header-reset-draft-mobile"
+                  onClick={onResetDraft}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-red-700 bg-red-50 border border-red-200 active:scale-95 transition-all"
+                  title={t.nav.startOverDraft}
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>{t.header.reset}</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Mode Switcher Buttons & Reset */}
+          {/* Mode Switcher Buttons, Language Selector & Reset (Desktop / Tablet) */}
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            {/* Desktop Language Selector */}
+            <div className="hidden sm:block">
+              <LanguageSelector />
+            </div>
+
             {hasDraft && activeView === 'FORM' && (
               <div className="hidden sm:flex items-center gap-2 mr-1">
                 <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Borrador guardado
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {t.header.draftSaved}
                 </span>
                 {onResetDraft && (
                   <button
@@ -113,10 +125,10 @@ export const Header: React.FC<HeaderProps> = ({
                     id="header-reset-draft-desktop"
                     onClick={onResetDraft}
                     className="text-[11px] text-slate-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer border border-transparent hover:border-red-200"
-                    title="Borrar datos actuales y comenzar de nuevo"
+                    title={t.nav.startOverDraft}
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>Empezar de cero</span>
+                    <span>{t.header.startOver}</span>
                   </button>
                 )}
               </div>
@@ -134,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>Ficha Jugador</span>
+                <span>{t.header.playerForm}</span>
               </button>
 
               <button
@@ -146,14 +158,14 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-red-600 text-white shadow-sm shadow-red-600/20'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title={isStaffAuthenticated ? 'Panel del Cuerpo Técnico' : 'Acceso protegido por clave para el Cuerpo Técnico'}
+                title={isStaffAuthenticated ? t.staffDashboard.title : t.header.staffProtectedTitle}
               >
                 {!isStaffAuthenticated ? (
                   <Lock className="w-3.5 h-3.5 text-slate-400" />
                 ) : (
                   <Users className="w-3.5 h-3.5" />
                 )}
-                <span>Cuerpo Técnico</span>
+                <span>{t.header.coachingStaff}</span>
                 <span
                   className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
                     activeView === 'STAFF'
@@ -172,7 +184,7 @@ export const Header: React.FC<HeaderProps> = ({
                 id="header-lock-staff-btn"
                 onClick={onLockStaff}
                 className="p-1.5 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-700 border border-slate-200 transition-colors cursor-pointer"
-                title="Cerrar sesión del Cuerpo Técnico y bloquear acceso"
+                title={t.header.logOutStaff}
               >
                 <LogOut className="w-4 h-4" />
               </button>

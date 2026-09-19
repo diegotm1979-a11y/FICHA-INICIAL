@@ -1,6 +1,7 @@
 import React from 'react';
 import { PlayerData } from '../../types';
 import { Trophy, Target, Users, Star } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface Step6Props {
   data: PlayerData;
@@ -9,12 +10,14 @@ interface Step6Props {
 }
 
 export const Step6Goals: React.FC<Step6Props> = ({ data, onChange, errors }) => {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-6">
       <div className="border-b border-slate-200 pb-4">
         <h3 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
           <Trophy className="w-6 h-6 text-red-600" />
-          Metas e Inspiración
+          {t.step6.title}
         </h3>
       </div>
 
@@ -22,7 +25,7 @@ export const Step6Goals: React.FC<Step6Props> = ({ data, onChange, errors }) => 
       <div className="space-y-2">
         <label htmlFor="individualGoal" className="block text-sm font-semibold text-slate-800 flex items-center gap-2">
           <Target className="w-4 h-4 text-red-600" />
-          Objetivo individual para la temporada <span className="text-red-600">*</span>
+          {t.step6.individualGoal} <span className="text-red-600">*</span>
         </label>
         <textarea
           id="individualGoal"
@@ -30,7 +33,7 @@ export const Step6Goals: React.FC<Step6Props> = ({ data, onChange, errors }) => 
           rows={3}
           value={data.individualGoal}
           onChange={(e) => onChange({ individualGoal: e.target.value })}
-          placeholder="Ej. Consolidarme en el once inicial, superar mi marca de 10 asistencias y ser más regular los 90 minutos..."
+          placeholder={t.step6.individualGoalPlaceholder}
           className={`w-full p-3.5 bg-white border rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 transition-all resize-none shadow-2xs ${
             errors.individualGoal
               ? 'border-red-500 focus:ring-red-500/30'
@@ -46,7 +49,7 @@ export const Step6Goals: React.FC<Step6Props> = ({ data, onChange, errors }) => 
       <div className="space-y-2">
         <label htmlFor="collectiveGoal" className="block text-sm font-semibold text-slate-800 flex items-center gap-2">
           <Users className="w-4 h-4 text-red-600" />
-          Objetivo colectivo para la temporada <span className="text-red-600">*</span>
+          {t.step6.collectiveGoal} <span className="text-red-600">*</span>
         </label>
         <textarea
           id="collectiveGoal"
@@ -54,7 +57,7 @@ export const Step6Goals: React.FC<Step6Props> = ({ data, onChange, errors }) => 
           rows={3}
           value={data.collectiveGoal}
           onChange={(e) => onChange({ collectiveGoal: e.target.value })}
-          placeholder="Ej. Clasificarnos para la fase de ascenso, ser el equipo más solidario de la liga y hacernos invencibles en casa..."
+          placeholder={t.step6.collectiveGoalPlaceholder}
           className={`w-full p-3.5 bg-white border rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 transition-all resize-none shadow-2xs ${
             errors.collectiveGoal
               ? 'border-red-500 focus:ring-red-500/30'
@@ -70,7 +73,7 @@ export const Step6Goals: React.FC<Step6Props> = ({ data, onChange, errors }) => 
       <div className="space-y-2">
         <label htmlFor="favoriteAthleteReferent" className="block text-sm font-semibold text-slate-800 flex items-center gap-2">
           <Star className="w-4 h-4 text-amber-500" />
-          Jugador y/o deportista favorito / referente <span className="text-red-600">*</span>
+          {t.step6.referent} <span className="text-red-600">*</span>
         </label>
         <input
           type="text"
@@ -78,7 +81,7 @@ export const Step6Goals: React.FC<Step6Props> = ({ data, onChange, errors }) => 
           name="favoriteAthleteReferent"
           value={data.favoriteAthleteReferent}
           onChange={(e) => onChange({ favoriteAthleteReferent: e.target.value })}
-          placeholder="Ej. Luka Modrić, Carles Puyol, Rafa Nadal, Kobe Bryant..."
+          placeholder={t.step6.referentPlaceholder}
           className={`w-full min-h-[48px] px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all shadow-2xs ${
             errors.favoriteAthleteReferent
               ? 'border-red-500 focus:ring-red-500/30'

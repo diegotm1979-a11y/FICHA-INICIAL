@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface TacticalPosition {
   id: string;
@@ -55,6 +56,7 @@ export const TacticalPitch: React.FC<TacticalPitchProps> = ({
   onChange,
   interactive = true,
 }) => {
+  const { t, language, translatePosition } = useLanguage();
   const [activePosId, setActivePosId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -95,10 +97,10 @@ export const TacticalPitch: React.FC<TacticalPitchProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="px-2.5 py-0.5 rounded-md text-xs font-black bg-red-600 text-white tracking-wide shadow-2xs">
-            Sistema {systemTitle}
+            {language === 'en' ? 'System' : 'Sistema'} {systemTitle}
           </span>
           <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-            Valores 1 al 9 por posición
+            {language === 'en' ? 'Values 1 to 9 per position' : 'Valores 1 al 9 por posición'}
           </span>
         </div>
 
@@ -107,10 +109,10 @@ export const TacticalPitch: React.FC<TacticalPitchProps> = ({
             type="button"
             onClick={handleClearPitch}
             className="text-[11px] font-semibold text-slate-500 hover:text-red-600 flex items-center gap-1 transition-colors cursor-pointer"
-            title="Borrar valores de este sistema"
+            title={t.step4.clearPitch}
           >
             <RotateCcw className="w-3 h-3" />
-            <span>Limpiar campo</span>
+            <span>{t.step4.clearPitch}</span>
           </button>
         )}
       </div>
@@ -369,9 +371,12 @@ export const TacticalPitch: React.FC<TacticalPitchProps> = ({
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-md p-2 sm:p-2.5 rounded-2xl border-2 border-red-500 shadow-2xl flex flex-col items-center gap-1.5 animate-in fade-in zoom-in-95 duration-150 max-w-[94%]">
             <div className="flex items-center justify-between w-full gap-2 px-1 text-xs">
               <span className="font-bold text-slate-900">
-                Posición: <span className="text-red-600">{activePosition.name}</span> ({activePosition.role})
+                {language === 'en' ? 'Position:' : 'Posición:'}{' '}
+                <span className="text-red-600">{translatePosition(activePosition.name)}</span> ({activePosition.role})
               </span>
-              <span className="text-[11px] text-slate-500">Selecciona (1 al 9):</span>
+              <span className="text-[11px] text-slate-500">
+                {language === 'en' ? 'Select (1 to 9):' : 'Selecciona (1 al 9):'}
+              </span>
             </div>
 
             <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
@@ -397,9 +402,9 @@ export const TacticalPitch: React.FC<TacticalPitchProps> = ({
                 type="button"
                 onClick={() => handleSetNumber(activePosId, null)}
                 className="px-2 h-7 sm:h-8 rounded-lg font-bold text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
-                title="Quitar número de esta posición"
+                title={language === 'en' ? 'Remove number from this position' : 'Quitar número de esta posición'}
               >
-                Borrar
+                {language === 'en' ? 'Clear' : 'Borrar'}
               </button>
 
               <button
@@ -407,7 +412,7 @@ export const TacticalPitch: React.FC<TacticalPitchProps> = ({
                 onClick={() => setActivePosId(null)}
                 className="px-2 h-7 sm:h-8 rounded-lg font-bold text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-700 transition-colors cursor-pointer"
               >
-                Listo
+                {language === 'en' ? 'Done' : 'Listo'}
               </button>
             </div>
           </div>
@@ -417,11 +422,15 @@ export const TacticalPitch: React.FC<TacticalPitchProps> = ({
       {/* Caption instruction */}
       {interactive ? (
         <p className="text-[11px] text-slate-500 text-center">
-          Clica en cualquier círculo blanco con borde rojo para escribir o elegir un número del 1 al 9.
+          {language === 'en'
+            ? 'Click on any white circle with a red border to enter or choose a number from 1 to 9.'
+            : 'Clica en cualquier círculo blanco con borde rojo para escribir o elegir un número del 1 al 9.'}
         </p>
       ) : (
         <p className="text-[10px] text-slate-400 text-center">
-          Posiciones y orden de preferencia táctica (1 = Máximo rendimiento)
+          {language === 'en'
+            ? 'Positions and tactical preference order (1 = Peak performance)'
+            : 'Posiciones y orden de preferencia táctica (1 = Máximo rendimiento)'}
         </p>
       )}
     </div>

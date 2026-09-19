@@ -5,6 +5,7 @@ import {
   FORMATION_13232_POSITIONS,
 } from './TacticalPitch';
 import { LayoutGrid, Info } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface TacticalSystemSectionProps {
   system4141Values: Record<string, number | null>;
@@ -21,6 +22,7 @@ export const TacticalSystemSection: React.FC<TacticalSystemSectionProps> = ({
   onChange13232,
   interactive = true,
 }) => {
+  const { t } = useLanguage();
   const count4141 = Object.values(system4141Values).filter((v) => v !== null && v !== undefined).length;
   const count13232 = Object.values(system13232Values).filter((v) => v !== null && v !== undefined).length;
 
@@ -34,10 +36,10 @@ export const TacticalSystemSection: React.FC<TacticalSystemSectionProps> = ({
           </div>
           <div>
             <h4 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-900">
-              Sistemas de Juego y Posicionamiento Táctico
+              {t.step4.tacticalSystemsTitle}
             </h4>
             <p className="text-xs text-slate-500">
-              Sistemas 1-4-1-4-1 y 1-3-2-3-2 · Círculos en blanco para numerar del 1 al 9
+              {t.step4.tacticalSystemsSubtitle}
             </p>
           </div>
         </div>
@@ -60,7 +62,7 @@ export const TacticalSystemSection: React.FC<TacticalSystemSectionProps> = ({
         <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5 text-xs text-slate-600">
           <Info className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
           <p className="leading-relaxed">
-            Colócate por orden de preferencia (Nº dentro del circulo) donde crees que puedes rendir en estos dos sistemas (1 Máximo rendimiento, 2, 3....)
+            {t.step4.tacticalSystemsInstruction}
           </p>
         </div>
       )}

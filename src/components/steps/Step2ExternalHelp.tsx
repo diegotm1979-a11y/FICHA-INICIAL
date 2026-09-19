@@ -1,6 +1,7 @@
 import React from 'react';
 import { PlayerData, EXTERNAL_HELP_OPTIONS } from '../../types';
 import { Activity, Dumbbell, Brain, Stethoscope, Apple, PlusCircle, Ban, Check } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface Step2Props {
   data: PlayerData;
@@ -9,22 +10,24 @@ interface Step2Props {
 }
 
 export const Step2ExternalHelp: React.FC<Step2Props> = ({ data, onChange, errors }) => {
+  const { t, translateExternalHelp } = useLanguage();
+
   const getIcon = (option: string) => {
     switch (option) {
       case 'Entrenador personal':
-        return <Dumbbell className="w-5 h-5 text-emerald-400 shrink-0" />;
+        return <Dumbbell className="w-5 h-5 text-emerald-500 shrink-0" />;
       case 'Coach / Psicólogo deportivo':
-        return <Brain className="w-5 h-5 text-indigo-400 shrink-0" />;
+        return <Brain className="w-5 h-5 text-indigo-500 shrink-0" />;
       case 'Fisioterapeuta / Readaptador externo':
-        return <Stethoscope className="w-5 h-5 text-teal-400 shrink-0" />;
+        return <Stethoscope className="w-5 h-5 text-teal-500 shrink-0" />;
       case 'Nutricionista':
-        return <Apple className="w-5 h-5 text-amber-400 shrink-0" />;
+        return <Apple className="w-5 h-5 text-amber-500 shrink-0" />;
       case 'Otros':
-        return <PlusCircle className="w-5 h-5 text-purple-400 shrink-0" />;
+        return <PlusCircle className="w-5 h-5 text-purple-500 shrink-0" />;
       case 'Ninguna':
         return <Ban className="w-5 h-5 text-slate-400 shrink-0" />;
       default:
-        return <Activity className="w-5 h-5 text-emerald-400 shrink-0" />;
+        return <Activity className="w-5 h-5 text-emerald-500 shrink-0" />;
     }
   };
 
@@ -66,22 +69,22 @@ export const Step2ExternalHelp: React.FC<Step2Props> = ({ data, onChange, errors
       <div className="border-b border-slate-200 pb-4">
         <h3 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
           <Activity className="w-6 h-6 text-red-600" />
-          Entorno y Rendimiento Externo
+          {t.step2.title}
         </h3>
         <p className="text-sm sm:text-base font-semibold text-slate-700 mt-1.5">
-          Ayudas externas
+          {t.step2.subtitle}
         </p>
       </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-slate-800">
-            Selecciona todas las que apliquen: <span className="text-red-600">*</span>
+            {t.step2.selectPrompt} <span className="text-red-600">*</span>
           </span>
           <span className="text-xs text-slate-500">
             {data.externalHelps.length === 0
-              ? 'Ninguna seleccionada'
-              : `${data.externalHelps.length} seleccionada(s)`}
+              ? t.step2.noneSelected
+              : `${data.externalHelps.length} ${t.step2.selectedCount}`}
           </span>
         </div>
 
@@ -89,6 +92,7 @@ export const Step2ExternalHelp: React.FC<Step2Props> = ({ data, onChange, errors
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {EXTERNAL_HELP_OPTIONS.map((opt) => {
             const selected = isSelected(opt);
+            const localizedLabel = translateExternalHelp(opt);
             return (
               <button
                 key={opt}
@@ -105,15 +109,13 @@ export const Step2ExternalHelp: React.FC<Step2Props> = ({ data, onChange, errors
               >
                 <div className="flex items-center gap-3">
                   {getIcon(opt)}
-                  <span className="font-semibold text-sm sm:text-base leading-snug">{opt}</span>
+                  <span className="font-semibold text-sm sm:text-base leading-snug">{localizedLabel}</span>
                 </div>
 
                 <div
                   className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
                     selected
-                      ? opt === 'Ninguna'
-                        ? 'bg-red-600 border-red-500 text-white'
-                        : 'bg-red-600 border-red-500 text-white'
+                      ? 'bg-red-600 border-red-500 text-white'
                       : 'border-slate-300 bg-slate-100'
                   }`}
                 >
@@ -132,7 +134,7 @@ export const Step2ExternalHelp: React.FC<Step2Props> = ({ data, onChange, errors
         {hasOther && (
           <div className="p-4 bg-slate-50/70 border border-red-300 rounded-xl space-y-2 animate-fadeIn">
             <label htmlFor="externalHelpOther" className="block text-sm font-semibold text-slate-800">
-              Especifica qué otras ayudas externas utilizas <span className="text-red-600">*</span>
+              {t.step2.otherSpecify} <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
@@ -140,7 +142,7 @@ export const Step2ExternalHelp: React.FC<Step2Props> = ({ data, onChange, errors
               name="externalHelpOther"
               value={data.externalHelpOther}
               onChange={(e) => onChange({ externalHelpOther: e.target.value })}
-              placeholder="Ej. Podólogo deportivo, osteópata, entrenador de fuerza específico..."
+              placeholder={t.step2.otherPlaceholder}
               className={`w-full min-h-[48px] px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all shadow-2xs ${
                 errors.externalHelpOther
                   ? 'border-red-500 focus:ring-red-500/30'

@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface Step7Props {
   data: PlayerData;
@@ -26,12 +27,14 @@ export const Step7Summary: React.FC<Step7Props> = ({
   onSubmit,
   isSubmitting = false,
 }) => {
+  const { t, language, translatePosition, translateExternalHelp } = useLanguage();
+
   return (
     <div className="space-y-6">
       <div className="border-b border-slate-200 pb-4">
         <h3 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
           <CheckCircle2 className="w-6 h-6 text-red-600" />
-          Resumen y Confirmación Final
+          {t.step7.title}
         </h3>
       </div>
 
@@ -40,7 +43,7 @@ export const Step7Summary: React.FC<Step7Props> = ({
         <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
           <div className="flex items-center gap-2 text-red-700 font-bold text-sm sm:text-base">
             <User className="w-4 h-4 text-red-600" />
-            <span>Paso 1: Datos Personales y Familiares</span>
+            <span>{t.stepsMeta.step1.title}</span>
           </div>
           <button
             type="button"
@@ -49,46 +52,48 @@ export const Step7Summary: React.FC<Step7Props> = ({
             className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors p-1"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Editar</span>
+            <span>{t.step7.edit}</span>
           </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
           <div>
-            <span className="text-xs text-slate-500 block">Nombre completo</span>
+            <span className="text-xs text-slate-500 block">{t.step1.fullName}</span>
             <span className="font-semibold text-slate-900">{data.fullName || '-'}</span>
           </div>
           <div>
-            <span className="text-xs text-slate-500 block">Apodo / Dorsal / Posición</span>
+            <span className="text-xs text-slate-500 block">
+              {language === 'en' ? 'Nickname / Dorsal / Position' : 'Apodo / Dorsal / Posición'}
+            </span>
             <span className="font-semibold text-slate-900">
               {data.nickname ? `"${data.nickname}"` : '-'}
               {data.dorsal ? ` · #${data.dorsal}` : ''}
-              {data.position ? ` · ${data.position}` : ''}
+              {data.position ? ` · ${translatePosition(data.position)}` : ''}
             </span>
           </div>
           <div>
-            <span className="text-xs text-slate-500 block">Teléfono y Correo</span>
+            <span className="text-xs text-slate-500 block">
+              {language === 'en' ? 'Phone and Email' : 'Teléfono y Correo'}
+            </span>
             <span className="text-slate-800 block truncate">{data.phone}</span>
             <span className="text-slate-500 text-xs truncate block">{data.email}</span>
           </div>
           <div>
-            <span className="text-xs text-slate-500 block">¿Tiene pareja?</span>
+            <span className="text-xs text-slate-500 block">{t.step1.partnerQuestion}</span>
             <span className="font-semibold text-slate-800">
               {data.hasPartner === null ? (
-                'No especificado'
+                t.step7.notSpecified
               ) : data.hasPartner ? (
-                <span className="text-emerald-600">Sí</span>
+                <span className="text-emerald-600">{t.common.yes}</span>
               ) : (
-                <span className="text-red-600">No</span>
+                <span className="text-red-600">{t.common.no}</span>
               )}
             </span>
           </div>
           <div>
-            <span className="text-xs text-slate-500 block">Hijos</span>
+            <span className="text-xs text-slate-500 block">{t.step1.childrenQuestion}</span>
             <span className="font-semibold text-slate-800">
-              {data.childrenCount === 0
-                ? '0 hijos'
-                : `${data.childrenCount === 3 ? '3 o más' : data.childrenCount} (${data.childrenAges || 'Edades no indicadas'})`}
+              {t.step7.childrenFormat(data.childrenCount, data.childrenAges)}
             </span>
           </div>
         </div>
@@ -99,7 +104,7 @@ export const Step7Summary: React.FC<Step7Props> = ({
         <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
           <div className="flex items-center gap-2 text-red-700 font-bold text-sm sm:text-base">
             <Activity className="w-4 h-4 text-red-600" />
-            <span>Paso 2: Entorno y Rendimiento Externo</span>
+            <span>{t.stepsMeta.step2.title}</span>
           </div>
           <button
             type="button"
@@ -108,14 +113,14 @@ export const Step7Summary: React.FC<Step7Props> = ({
             className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors p-1"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Editar</span>
+            <span>{t.step7.edit}</span>
           </button>
         </div>
 
         <div>
-          <span className="text-xs text-slate-500 block mb-1.5">Profesionales y ayudas externas:</span>
+          <span className="text-xs text-slate-500 block mb-1.5">{t.step2.subtitle}:</span>
           {data.externalHelps.length === 0 ? (
-            <span className="text-sm text-slate-500 italic">Ninguna seleccionada</span>
+            <span className="text-sm text-slate-500 italic">{t.step7.externalHelpNone}</span>
           ) : (
             <div className="flex flex-wrap gap-2">
               {data.externalHelps.map((h) => (
@@ -123,7 +128,9 @@ export const Step7Summary: React.FC<Step7Props> = ({
                   key={h}
                   className="px-2.5 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-800 border border-red-200"
                 >
-                  {h === 'Otros' && data.externalHelpOther ? `Otros: ${data.externalHelpOther}` : h}
+                  {h === 'Otros' && data.externalHelpOther
+                    ? `${translateExternalHelp('Otros')}: ${data.externalHelpOther}`
+                    : translateExternalHelp(h)}
                 </span>
               ))}
             </div>
@@ -136,7 +143,7 @@ export const Step7Summary: React.FC<Step7Props> = ({
         <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
           <div className="flex items-center gap-2 text-red-700 font-bold text-sm sm:text-base">
             <Target className="w-4 h-4 text-red-600" />
-            <span>Paso 3: Acciones a Balón Parado (ABP)</span>
+            <span>{t.stepsMeta.step3.title}</span>
           </div>
           <button
             type="button"
@@ -145,39 +152,39 @@ export const Step7Summary: React.FC<Step7Props> = ({
             className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors p-1"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Editar</span>
+            <span>{t.step7.edit}</span>
           </button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs sm:text-sm">
           <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-            <span className="text-slate-500 text-xs block">Lanzador faltas/córners:</span>
+            <span className="text-slate-500 text-xs block">{t.step3.foulsCorners}:</span>
             <span className={`font-bold ${data.abpOffensiveFoulsCorners ? 'text-emerald-600' : 'text-red-600'}`}>
-              {data.abpOffensiveFoulsCorners ? 'Sí' : 'No'}
+              {data.abpOffensiveFoulsCorners ? t.common.yes : t.common.no}
             </span>
           </div>
           <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-            <span className="text-slate-500 text-xs block">Rematador de área:</span>
+            <span className="text-slate-500 text-xs block">{t.step3.header}:</span>
             <span className={`font-bold ${data.abpOffensiveHeader ? 'text-emerald-600' : 'text-red-600'}`}>
-              {data.abpOffensiveHeader ? 'Sí' : 'No'}
+              {data.abpOffensiveHeader ? t.common.yes : t.common.no}
             </span>
           </div>
           <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-            <span className="text-slate-500 text-xs block">Memoriza jugadas:</span>
+            <span className="text-slate-500 text-xs block">{t.step3.memorizePlays}:</span>
             <span className={`font-bold ${data.abpMemorizePlays ? 'text-emerald-600' : 'text-red-600'}`}>
-              {data.abpMemorizePlays ? 'Sí' : 'No'}
+              {data.abpMemorizePlays ? t.common.yes : t.common.no}
             </span>
           </div>
           <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-            <span className="text-slate-500 text-xs block">Marcador al hombre:</span>
+            <span className="text-slate-500 text-xs block">{t.step3.manMarking}:</span>
             <span className={`font-bold ${data.abpDefensiveManMarking ? 'text-slate-800' : 'text-red-600'}`}>
-              {data.abpDefensiveManMarking ? 'Sí' : 'No'}
+              {data.abpDefensiveManMarking ? t.common.yes : t.common.no}
             </span>
           </div>
           <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-            <span className="text-slate-500 text-xs block">Defensor en zona:</span>
+            <span className="text-slate-500 text-xs block">{t.step3.zonalDefense}:</span>
             <span className={`font-bold ${data.abpDefensiveZone ? 'text-slate-800' : 'text-red-600'}`}>
-              {data.abpDefensiveZone ? 'Sí' : 'No'}
+              {data.abpDefensiveZone ? t.common.yes : t.common.no}
             </span>
           </div>
         </div>
@@ -188,7 +195,7 @@ export const Step7Summary: React.FC<Step7Props> = ({
         <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
           <div className="flex items-center gap-2 text-red-700 font-bold text-sm sm:text-base">
             <Sparkles className="w-4 h-4 text-red-600" />
-            <span>Paso 4: Psicología y Análisis Técnico-Táctico</span>
+            <span>{t.stepsMeta.step4.title}</span>
           </div>
           <button
             type="button"
@@ -197,31 +204,31 @@ export const Step7Summary: React.FC<Step7Props> = ({
             className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors p-1"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Editar</span>
+            <span>{t.step7.edit}</span>
           </button>
         </div>
 
         <div className="space-y-2 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-slate-600">Grado de ilusión inicial:</span>
+            <span className="text-slate-600">{t.step4.illusionLabel}:</span>
             <span className="px-2 py-0.5 rounded-md font-bold bg-red-100 text-red-700 text-xs">
               {data.illusionScore} / 10
             </span>
           </div>
           <div>
-            <span className="text-slate-500 text-xs block">Rasgos positivos personalidad:</span>
+            <span className="text-slate-500 text-xs block">{t.step4.positiveTraits}:</span>
             <p className="text-slate-800 mt-0.5 text-xs sm:text-sm">{data.positivePersonalityTraits || '-'}</p>
           </div>
           <div>
-            <span className="text-slate-500 text-xs block">Rasgos a mejorar personalidad:</span>
+            <span className="text-slate-500 text-xs block">{t.step4.improvementTraits}:</span>
             <p className="text-slate-800 mt-0.5 text-xs sm:text-sm">{data.personalityImprovementTraits || '-'}</p>
           </div>
           <div>
-            <span className="text-slate-500 text-xs block">Características técnico-tácticas destacadas:</span>
+            <span className="text-slate-500 text-xs block">{t.step4.tacticalStrengths}:</span>
             <p className="text-slate-800 mt-0.5 text-xs sm:text-sm">{data.tacticalStrengths || '-'}</p>
           </div>
           <div>
-            <span className="text-slate-500 text-xs block">Aspectos técnico-tácticos a mejorar:</span>
+            <span className="text-slate-500 text-xs block">{t.step4.tacticalImprovements}:</span>
             <p className="text-slate-800 mt-0.5 text-xs sm:text-sm">{data.tacticalImprovements || '-'}</p>
           </div>
 
@@ -240,7 +247,7 @@ export const Step7Summary: React.FC<Step7Props> = ({
         <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
           <div className="flex items-center gap-2 text-red-700 font-bold text-sm sm:text-base">
             <Compass className="w-4 h-4 text-red-600" />
-            <span>Paso 5: Compromiso y Hábitos</span>
+            <span>{t.stepsMeta.step5.title}</span>
           </div>
           <button
             type="button"
@@ -249,33 +256,33 @@ export const Step7Summary: React.FC<Step7Props> = ({
             className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors p-1"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Editar</span>
+            <span>{t.step7.edit}</span>
           </button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm">
           <div className="p-2.5 bg-white rounded-lg border border-slate-200">
-            <span className="text-slate-500 text-xs block">No titular:</span>
+            <span className="text-slate-500 text-xs block">{t.step5.notStarting}:</span>
             <span className="font-bold text-red-600 text-base">{data.commitmentNotStarting}/10</span>
           </div>
           <div className="p-2.5 bg-white rounded-lg border border-slate-200">
-            <span className="text-slate-500 text-xs block">Sustituido:</span>
+            <span className="text-slate-500 text-xs block">{t.step5.substituted}:</span>
             <span className="font-bold text-red-600 text-base">{data.commitmentSubstituted}/10</span>
           </div>
           <div className="p-2.5 bg-white rounded-lg border border-slate-200">
-            <span className="text-slate-500 text-xs block">Entrenamiento campo:</span>
+            <span className="text-slate-500 text-xs block">{t.step5.pitchTraining}:</span>
             <span className="font-bold text-red-600 text-base">{data.likePitchTraining}/10</span>
           </div>
           <div className="p-2.5 bg-white rounded-lg border border-slate-200">
-            <span className="text-slate-500 text-xs block">Gimnasio y fuerza:</span>
+            <span className="text-slate-500 text-xs block">{t.step5.gymWork}:</span>
             <span className="font-bold text-red-600 text-base">{data.likeGymWork}/10</span>
           </div>
           <div className="p-2.5 bg-white rounded-lg border border-slate-200">
-            <span className="text-slate-500 text-xs block">Cuidado personal:</span>
+            <span className="text-slate-500 text-xs block">{t.step5.selfCare}:</span>
             <span className="font-bold text-red-600 text-base">{data.likeSelfCare}/10</span>
           </div>
           <div className="p-2.5 bg-white rounded-lg border border-slate-200">
-            <span className="text-slate-500 text-xs block">Preparación previa:</span>
+            <span className="text-slate-500 text-xs block">{t.step5.physicalScore}:</span>
             <span className="font-bold text-red-600 text-base">{data.physicalPreparationScore}/10</span>
           </div>
         </div>
@@ -286,7 +293,7 @@ export const Step7Summary: React.FC<Step7Props> = ({
         <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
           <div className="flex items-center gap-2 text-red-700 font-bold text-sm sm:text-base">
             <Trophy className="w-4 h-4 text-red-600" />
-            <span>Paso 6: Metas e Inspiración</span>
+            <span>{t.stepsMeta.step6.title}</span>
           </div>
           <button
             type="button"
@@ -295,21 +302,21 @@ export const Step7Summary: React.FC<Step7Props> = ({
             className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors p-1"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Editar</span>
+            <span>{t.step7.edit}</span>
           </button>
         </div>
 
         <div className="space-y-2 text-xs sm:text-sm">
           <div>
-            <span className="text-slate-500 text-xs block">Objetivo individual:</span>
+            <span className="text-slate-500 text-xs block">{t.step6.individualGoal}:</span>
             <p className="text-slate-800 mt-0.5 text-xs sm:text-sm">{data.individualGoal || '-'}</p>
           </div>
           <div>
-            <span className="text-slate-500 text-xs block">Objetivo colectivo:</span>
+            <span className="text-slate-500 text-xs block">{t.step6.collectiveGoal}:</span>
             <p className="text-slate-800 mt-0.5 text-xs sm:text-sm">{data.collectiveGoal || '-'}</p>
           </div>
           <div>
-            <span className="text-slate-500 text-xs block">Referente deportivo:</span>
+            <span className="text-slate-500 text-xs block">{t.step6.referent}:</span>
             <p className="text-slate-800 mt-0.5 font-semibold text-xs sm:text-sm">{data.favoriteAthleteReferent || '-'}</p>
           </div>
         </div>
@@ -321,10 +328,12 @@ export const Step7Summary: React.FC<Step7Props> = ({
           <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <h4 className="text-sm sm:text-base font-bold text-slate-900">
-              ¿Listo para enviar tu ficha al cuerpo técnico?
+              {language === 'en'
+                ? 'Ready to submit your profile to the coaching staff?'
+                : '¿Listo para enviar tu ficha al cuerpo técnico?'}
             </h4>
             <p className="text-xs sm:text-sm text-slate-600">
-              Al pulsar "Enviar Ficha al Cuerpo Técnico", tus respuestas quedarán registradas de forma confidencial para el cuerpo técnico.
+              {t.step7.disclaimer}
             </p>
           </div>
         </div>
@@ -337,7 +346,7 @@ export const Step7Summary: React.FC<Step7Props> = ({
           className="w-full min-h-[52px] px-6 py-3.5 rounded-xl text-white font-extrabold text-base bg-red-600 hover:bg-red-700 active:scale-[0.99] transition-all shadow-lg shadow-red-600/25 flex items-center justify-center gap-2 cursor-pointer"
         >
           <CheckCircle2 className="w-5 h-5" />
-          <span>{isSubmitting ? 'Guardando ficha...' : 'Enviar Ficha al Cuerpo Técnico'}</span>
+          <span>{isSubmitting ? t.step7.submittingBtn : t.step7.submitBtn}</span>
         </button>
       </div>
     </div>

@@ -14,6 +14,7 @@ import { SuccessView } from './components/SuccessView';
 import { StaffDashboard } from './components/StaffDashboard';
 import { ClubBadgeEditorModal } from './components/ClubBadgeEditorModal';
 import { StaffPinModal } from './components/StaffPinModal';
+import { useLanguage } from './context/LanguageContext';
 import {
   getStoredPlayers,
   savePlayerSubmission,
@@ -30,9 +31,10 @@ import {
   syncStaffConfigWithSupabase,
 } from './utils/storage';
 import { ConfirmModal } from './components/ConfirmModal';
-import { ArrowLeft, ArrowRight, Shield, Check, RotateCcw, Lock, UserCheck, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Shield, Check, RotateCcw } from 'lucide-react';
 
 export default function App() {
+  const { t, language } = useLanguage();
   const [activeView, setActiveView] = useState<'FORM' | 'STAFF' | 'SUCCESS'>('FORM');
   const [currentStep, setCurrentStep] = useState<FormStep>(1);
   const [maxStepVisited, setMaxStepVisited] = useState<FormStep>(1);
@@ -132,76 +134,77 @@ export default function App() {
   // Step Validation logic
   const validateStep = (step: FormStep): boolean => {
     const newErrors: Record<string, string> = {};
+    const isEn = language === 'en';
 
     if (step === 1) {
       if (!formData.fullName.trim()) {
-        newErrors.fullName = 'El nombre completo es obligatorio.';
+        newErrors.fullName = isEn ? 'Full name is required.' : 'El nombre completo es obligatorio.';
       } else if (formData.fullName.trim().length < 3) {
-        newErrors.fullName = 'Introduce nombre y apellidos válidos.';
+        newErrors.fullName = isEn ? 'Enter valid first and last name.' : 'Introduce nombre y apellidos válidos.';
       }
 
       const phoneClean = formData.phone.replace(/[^0-9+]/g, '');
       if (!formData.phone.trim()) {
-        newErrors.phone = 'El teléfono de contacto es obligatorio.';
+        newErrors.phone = isEn ? 'Contact phone is required.' : 'El teléfono de contacto es obligatorio.';
       } else if (phoneClean.length < 7) {
-        newErrors.phone = 'Introduce un número de teléfono válido.';
+        newErrors.phone = isEn ? 'Enter a valid phone number.' : 'Introduce un número de teléfono válido.';
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!formData.email.trim()) {
-        newErrors.email = 'El correo electrónico es obligatorio.';
+        newErrors.email = isEn ? 'Email address is required.' : 'El correo electrónico es obligatorio.';
       } else if (!emailRegex.test(formData.email.trim())) {
-        newErrors.email = 'Introduce una dirección de correo válida (ej. nombre@correo.com).';
+        newErrors.email = isEn ? 'Enter a valid email address.' : 'Introduce una dirección de correo válida (ej. nombre@correo.com).';
       }
 
       if (formData.hasPartner === null) {
-        newErrors.hasPartner = 'Por favor, indica si tienes pareja.';
+        newErrors.hasPartner = isEn ? 'Please indicate whether you have a partner.' : 'Por favor, indica si tienes pareja.';
       }
 
       if (formData.childrenCount > 0 && !formData.childrenAges.trim()) {
-        newErrors.childrenAges = 'Indica la edad o edades de tus hijos.';
+        newErrors.childrenAges = isEn ? 'Indicate the age(s) of your children.' : 'Indica la edad o edades de tus hijos.';
       }
     }
 
     if (step === 2) {
       if (formData.externalHelps.length === 0) {
-        newErrors.externalHelps = 'Selecciona al menos una opción o marca "Ninguna".';
+        newErrors.externalHelps = isEn ? 'Select at least one option or mark "None".' : 'Selecciona al menos una opción o marca "Ninguna".';
       }
       if (formData.externalHelps.includes('Otros') && !formData.externalHelpOther.trim()) {
-        newErrors.externalHelpOther = 'Especifica qué otra ayuda externa utilizas.';
+        newErrors.externalHelpOther = isEn ? 'Specify what other external support you work with.' : 'Especifica qué otra ayuda externa utilizas.';
       }
     }
 
     if (step === 3) {
       if (formData.abpOffensiveFoulsCorners === null) {
-        newErrors.abpOffensiveFoulsCorners = 'Indica si eres lanzador de faltas/córners.';
+        newErrors.abpOffensiveFoulsCorners = isEn ? 'Indicate if you are a set piece taker.' : 'Indica si eres lanzador de faltas/córners.';
       }
       if (formData.abpOffensiveHeader === null) {
-        newErrors.abpOffensiveHeader = 'Indica si eres rematador en el área.';
+        newErrors.abpOffensiveHeader = isEn ? 'Indicate if you are a box header.' : 'Indica si eres rematador en el área.';
       }
       if (formData.abpMemorizePlays === null) {
-        newErrors.abpMemorizePlays = 'Indica tu capacidad para memorizar jugadas ensayadas.';
+        newErrors.abpMemorizePlays = isEn ? 'Indicate your ability to memorize set plays.' : 'Indica tu capacidad para memorizar jugadas ensayadas.';
       }
       if (formData.abpDefensiveManMarking === null) {
-        newErrors.abpDefensiveManMarking = 'Indica si marcas al hombre.';
+        newErrors.abpDefensiveManMarking = isEn ? 'Indicate if you perform man-marking.' : 'Indica si marcas al hombre.';
       }
       if (formData.abpDefensiveZone === null) {
-        newErrors.abpDefensiveZone = 'Indica si defiendes en zona.';
+        newErrors.abpDefensiveZone = isEn ? 'Indicate if you defend zonally.' : 'Indica si defiendes en zona.';
       }
     }
 
     if (step === 4) {
       if (!formData.positivePersonalityTraits.trim()) {
-        newErrors.positivePersonalityTraits = 'Indica al menos un rasgo positivo de tu personalidad.';
+        newErrors.positivePersonalityTraits = isEn ? 'Indicate at least one positive personality trait.' : 'Indica al menos un rasgo positivo de tu personalidad.';
       }
       if (!formData.personalityImprovementTraits.trim()) {
-        newErrors.personalityImprovementTraits = 'Indica un rasgo de tu personalidad que te gustaría mejorar.';
+        newErrors.personalityImprovementTraits = isEn ? 'Indicate a personality trait you want to improve.' : 'Indica un rasgo de tu personalidad que te gustaría mejorar.';
       }
       if (!formData.tacticalStrengths.trim()) {
-        newErrors.tacticalStrengths = 'Indica en qué características técnico-tácticas destacas.';
+        newErrors.tacticalStrengths = isEn ? 'Indicate your key technical/tactical strengths.' : 'Indica en qué características técnico-tácticas destacas.';
       }
       if (!formData.tacticalImprovements.trim()) {
-        newErrors.tacticalImprovements = 'Indica qué aspecto técnico-táctico deseas pulir esta temporada.';
+        newErrors.tacticalImprovements = isEn ? 'Indicate technical/tactical aspects to refine.' : 'Indica qué aspecto técnico-táctico deseas pulir esta temporada.';
       }
     }
 
@@ -209,13 +212,13 @@ export default function App() {
 
     if (step === 6) {
       if (!formData.individualGoal.trim()) {
-        newErrors.individualGoal = 'Escribe tu meta individual para este año.';
+        newErrors.individualGoal = isEn ? 'Enter your individual goal for this year.' : 'Escribe tu meta individual para este año.';
       }
       if (!formData.collectiveGoal.trim()) {
-        newErrors.collectiveGoal = 'Escribe tu objetivo para el equipo.';
+        newErrors.collectiveGoal = isEn ? 'Enter your goal for the team.' : 'Escribe tu objetivo para el equipo.';
       }
       if (!formData.favoriteAthleteReferent.trim()) {
-        newErrors.favoriteAthleteReferent = 'Indica un deportista o jugador referente.';
+        newErrors.favoriteAthleteReferent = isEn ? 'Indicate an athlete or role model.' : 'Indica un deportista o jugador referente.';
       }
     }
 
@@ -274,7 +277,7 @@ export default function App() {
       setPlayers(updatedList);
       setSubmittedPlayer(finalPlayer);
 
-      // Cada vez que se envía la ficha al cuerpo técnico, vuelve a estar en blanco automáticamente
+      // Reset draft to clean form
       clearFormDraft();
       setFormData(INITIAL_PLAYER_DATA);
       setCurrentStep(1);
@@ -308,7 +311,7 @@ export default function App() {
     setMaxStepVisited(1);
     setErrors({});
     setIsResetConfirmOpen(false);
-    setToastMessage('Formulario restablecido en blanco.');
+    setToastMessage(language === 'en' ? 'Form cleared and reset to blank.' : 'Formulario restablecido en blanco.');
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
@@ -343,7 +346,11 @@ export default function App() {
     setIsStaffAuthenticated(false);
     clearStaffSession();
     setActiveView('FORM');
-    setToastMessage('Sesión del Cuerpo Técnico cerrada y panel protegido.');
+    setToastMessage(
+      language === 'en'
+        ? 'Coaching Staff session locked and dashboard protected.'
+        : 'Sesión del Cuerpo Técnico cerrada y panel protegido.'
+    );
     setTimeout(() => setToastMessage(null), 3000);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -360,7 +367,11 @@ export default function App() {
   const handleSaveClubProfile = (newProfile: ClubProfile) => {
     setClubProfile(newProfile);
     saveClubProfile(newProfile);
-    setToastMessage('Escudo e identidad del club actualizados.');
+    setToastMessage(
+      language === 'en'
+        ? 'Club crest and identity updated.'
+        : 'Escudo e identidad del club actualizados.'
+    );
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
@@ -418,7 +429,7 @@ export default function App() {
           <div className="max-w-3xl mx-auto w-full px-4 pt-3 pb-1">
             <div className="flex items-center justify-between gap-1.5 text-xs py-1">
               <span className="text-[11px] text-slate-500">
-                Completa tu ficha antes de iniciar la pretemporada. Tus datos son privados y se envían directamente al cuerpo técnico.
+                {t.nav.privacyNotice}
               </span>
             </div>
           </div>
@@ -509,12 +520,12 @@ export default function App() {
                     }`}
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">Paso Anterior</span>
-                    <span className="sm:hidden">Atrás</span>
+                    <span className="hidden sm:inline">{t.nav.prevStep}</span>
+                    <span className="sm:hidden">{t.nav.back}</span>
                   </button>
 
                   <div className="text-xs text-slate-500 font-semibold hidden md:block">
-                    Paso {currentStep} de 7
+                    {t.nav.stepOf.replace('{current}', String(currentStep)).replace('{total}', '7')}
                   </div>
 
                   <button
@@ -523,7 +534,7 @@ export default function App() {
                     onClick={handleNext}
                     className="min-h-[48px] px-6 sm:px-8 py-3 rounded-xl font-extrabold text-sm sm:text-base bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 shadow-lg shadow-red-600/25 transition-all active:scale-95 cursor-pointer"
                   >
-                    <span>{currentStep === 6 ? 'Revisar Resumen' : 'Siguiente Paso'}</span>
+                    <span>{currentStep === 6 ? t.nav.reviewSummary : t.nav.nextStep}</span>
                     <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                   </button>
                 </div>
@@ -539,7 +550,7 @@ export default function App() {
                     className="text-xs text-slate-500 hover:text-red-600 py-2 px-3 rounded-lg hover:bg-red-50 flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Empezar de cero y borrar borrador</span>
+                    <span>{t.nav.startOverDraft}</span>
                   </button>
                 </div>
               )}
@@ -551,10 +562,10 @@ export default function App() {
       {/* In-app Reset Confirmation Modal */}
       <ConfirmModal
         isOpen={isResetConfirmOpen}
-        title="¿Empezar de cero?"
-        message="Se borrarán todos los datos introducidos en el formulario y volverás al Paso 1 con la ficha limpia. Esta acción no se puede deshacer."
-        confirmLabel="Sí, empezar de cero"
-        cancelLabel="Cancelar"
+        title={t.modals.resetConfirmTitle}
+        message={t.modals.resetConfirmMessage}
+        confirmLabel={t.modals.resetConfirmBtn}
+        cancelLabel={t.common.cancel}
         variant="reset"
         onConfirm={handleConfirmReset}
         onCancel={() => setIsResetConfirmOpen(false)}
@@ -596,10 +607,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="flex items-center gap-1">
             <Shield className="w-3.5 h-3.5 text-red-600" />
-            <span>Ficha Inicial de Temporada · Gestión Técnica y Táctica de Plantilla</span>
+            <span>{t.nav.footerTitle}</span>
           </p>
           <p className="text-[11px] text-slate-500">
-            Diseñado para dispositivos móviles y cuerpo técnico profesional
+            {t.nav.footerSubtitle}
           </p>
         </div>
       </footer>

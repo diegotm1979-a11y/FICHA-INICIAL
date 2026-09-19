@@ -7,6 +7,7 @@ import {
   Sparkles,
   Award,
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SuccessViewProps {
   player: PlayerData;
@@ -17,6 +18,8 @@ export const SuccessView: React.FC<SuccessViewProps> = ({
   player,
   onNewForm,
 }) => {
+  const { t, language, translatePosition } = useLanguage();
+
   return (
     <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4 space-y-8 animate-fadeIn">
       {/* Motivational Trophy Hero */}
@@ -27,13 +30,13 @@ export const SuccessView: React.FC<SuccessViewProps> = ({
 
         <div className="space-y-1">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-red-50 text-red-700 border border-red-200">
-            <Sparkles className="w-3.5 h-3.5" /> Ficha registrada con éxito
+            <Sparkles className="w-3.5 h-3.5" /> {t.success.badge}
           </span>
           <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            ¡FICHA ENVIADA AL CUERPO TÉCNICO!
+            {t.success.heroTitle}
           </h2>
           <p className="text-slate-600 text-sm sm:text-base max-w-md mx-auto leading-relaxed pt-1">
-            Gracias, <strong className="text-slate-900">{player.fullName}</strong>. Tus respuestas han quedado registradas de forma confidencial en el sistema del cuerpo técnico.
+            {t.success.heroSubtitle(player.fullName)}
           </p>
         </div>
       </div>
@@ -42,7 +45,7 @@ export const SuccessView: React.FC<SuccessViewProps> = ({
       <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center justify-center gap-2">
         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
         <span>
-          <strong>Formulario en blanco:</strong> El formulario se ha restablecido automáticamente en blanco para preservar la privacidad de tus datos.
+          <strong>{t.success.autoResetTitle}</strong> {t.success.autoResetNotice}
         </span>
       </div>
 
@@ -53,13 +56,16 @@ export const SuccessView: React.FC<SuccessViewProps> = ({
         <div className="p-4 sm:p-5 rounded-2xl bg-red-50/60 border border-red-200 text-center space-y-1.5">
           <div className="flex items-center justify-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wider">
             <Award className="w-4 h-4" />
-            <span>Compromiso e Ilusión</span>
+            <span>{t.success.quoteTitle}</span>
           </div>
           <p className="text-sm sm:text-base font-semibold text-slate-900 italic">
-            "El talento gana partidos, pero el trabajo en equipo y el compromiso ganan campeonatos."
+            {t.success.quoteText}
           </p>
           <p className="text-xs text-slate-600">
-            Objetivo colectivo: <span className="text-red-700 font-semibold">"{player.collectiveGoal || 'Dar el 100% cada partido'}"</span>
+            {t.success.collectiveGoalLabel}{' '}
+            <span className="text-red-700 font-semibold">
+              "{player.collectiveGoal || t.success.defaultCollectiveGoal}"
+            </span>
           </p>
         </div>
 
@@ -73,36 +79,40 @@ export const SuccessView: React.FC<SuccessViewProps> = ({
               <div>
                 <h3 className="font-bold text-slate-900 text-base sm:text-lg">{player.fullName}</h3>
                 <p className="text-xs text-slate-500">
-                  {player.position} {player.nickname ? `("${player.nickname}")` : ''}
+                  {player.position ? translatePosition(player.position) : ''} {player.nickname ? `("${player.nickname}")` : ''}
                 </p>
               </div>
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] text-slate-500 block uppercase font-bold">Ilusión</span>
+              <span className="text-[10px] text-slate-500 block uppercase font-bold">
+                {language === 'en' ? 'Illusion' : 'Ilusión'}
+              </span>
               <span className="text-xl font-black text-red-600">{player.illusionScore}/10</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
             <div className="p-2 rounded-lg bg-white border border-slate-200">
-              <span className="text-slate-500 block text-[10px]">ABP Ofensivo</span>
+              <span className="text-slate-500 block text-[10px]">{t.success.abpOffensiveLabel}</span>
               <span className="font-bold text-red-600">
-                {player.abpOffensiveFoulsCorners ? 'Lanzador' : player.abpOffensiveHeader ? 'Rematador' : 'Apoyo'}
+                {player.abpOffensiveFoulsCorners ? t.success.roleTaker : player.abpOffensiveHeader ? t.success.roleHeader : t.success.roleSupport}
               </span>
             </div>
             <div className="p-2 rounded-lg bg-white border border-slate-200">
-              <span className="text-slate-500 block text-[10px]">ABP Defensivo</span>
+              <span className="text-slate-500 block text-[10px]">{t.success.abpDefensiveLabel}</span>
               <span className="font-bold text-slate-800">
-                {player.abpDefensiveManMarking ? 'Hombre' : player.abpDefensiveZone ? 'Zona' : 'Flexible'}
+                {player.abpDefensiveManMarking ? t.success.roleMan : player.abpDefensiveZone ? t.success.roleZone : t.success.roleFlexible}
               </span>
             </div>
             <div className="p-2 rounded-lg bg-white border border-slate-200">
-              <span className="text-slate-500 block text-[10px]">Compromiso</span>
+              <span className="text-slate-500 block text-[10px]">
+                {language === 'en' ? 'Commitment' : 'Compromiso'}
+              </span>
               <span className="font-bold text-red-600">{player.commitmentNotStarting}/10</span>
             </div>
             <div className="p-2 rounded-lg bg-white border border-slate-200">
-              <span className="text-slate-500 block text-[10px]">Físico Previo</span>
+              <span className="text-slate-500 block text-[10px]">{t.success.physicalPrepLabel}</span>
               <span className="font-bold text-red-600">{player.physicalPreparationScore}/10</span>
             </div>
           </div>
@@ -118,10 +128,9 @@ export const SuccessView: React.FC<SuccessViewProps> = ({
           className="w-full sm:w-auto min-h-[48px] px-8 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Volver al formulario en blanco</span>
+          <span>{t.success.newFormBtn}</span>
         </button>
       </div>
     </div>
   );
 };
-

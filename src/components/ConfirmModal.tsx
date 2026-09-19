@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X, RotateCcw, Trash2 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -16,13 +17,17 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
   title,
   message,
-  confirmLabel = 'Confirmar',
-  cancelLabel = 'Cancelar',
+  confirmLabel,
+  cancelLabel,
   variant = 'danger',
   onConfirm,
   onCancel,
 }) => {
+  const { t } = useLanguage();
   if (!isOpen) return null;
+
+  const displayConfirm = confirmLabel || t.common.confirm;
+  const displayCancel = cancelLabel || t.common.cancel;
 
   return (
     <div
@@ -39,7 +44,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           type="button"
           onClick={onCancel}
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-lg hover:bg-slate-100 transition-colors"
-          aria-label="Cerrar modal"
+          aria-label={t.common.close}
         >
           <X className="w-5 h-5" />
         </button>
@@ -79,7 +84,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             onClick={onCancel}
             className="min-h-[42px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors border border-slate-300 cursor-pointer"
           >
-            {cancelLabel}
+            {displayCancel}
           </button>
           <button
             type="button"
@@ -88,7 +93,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           >
             {variant === 'reset' && <RotateCcw className="w-3.5 h-3.5" />}
             {variant === 'danger' && <Trash2 className="w-3.5 h-3.5" />}
-            <span>{confirmLabel}</span>
+            <span>{displayConfirm}</span>
           </button>
         </div>
       </div>

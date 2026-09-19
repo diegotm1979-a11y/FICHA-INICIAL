@@ -4,8 +4,8 @@ import { exportSinglePlayerToCSV } from '../utils/export';
 import { downloadElementAsPdf, safePrint } from '../utils/pdfExport';
 import { getClubProfile } from '../utils/storage';
 import { TacticalSystemSection } from './TacticalSystemSection';
+import { useLanguage } from '../context/LanguageContext';
 import {
-  Printer,
   Download,
   User,
   Shield,
@@ -30,6 +30,7 @@ export const PlayerPrintableCard: React.FC<PlayerPrintableCardProps> = ({
   onClose,
   showActions = true,
 }) => {
+  const { t, language, translatePosition, translateExternalHelp } = useLanguage();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfSuccess, setPdfSuccess] = useState(false);
   const cardContentRef = useRef<HTMLDivElement>(null);
@@ -61,15 +62,19 @@ export const PlayerPrintableCard: React.FC<PlayerPrintableCardProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 print:hidden no-print">
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-              Dossier Oficial de Jugador
+              {language === 'en' ? 'Official Player Dossier' : 'Dossier Oficial de Jugador'}
             </span>
             <span className="text-xs text-slate-500 flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5" />
-              {player.submittedAt ? new Date(player.submittedAt).toLocaleDateString('es-ES') : 'Borrador'}
+              {player.submittedAt
+                ? new Date(player.submittedAt).toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES')
+                : language === 'en'
+                ? 'Draft'
+                : 'Borrador'}
             </span>
             {pdfSuccess && (
               <span className="text-xs text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> ¡PDF Descargado!
+                <CheckCircle2 className="w-3.5 h-3.5" /> {language === 'en' ? 'PDF Downloaded!' : '¡PDF Descargado!'}
               </span>
             )}
           </div>
@@ -89,12 +94,12 @@ export const PlayerPrintableCard: React.FC<PlayerPrintableCardProps> = ({
               {isGeneratingPdf ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
-                  <span>Generando PDF...</span>
+                  <span>{language === 'en' ? 'Generating PDF...' : 'Generando PDF...'}</span>
                 </>
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5 text-red-600" />
-                  <span>Descargar PDF</span>
+                  <span>{language === 'en' ? 'Download PDF' : 'Descargar PDF'}</span>
                 </>
               )}
             </button>
@@ -106,7 +111,7 @@ export const PlayerPrintableCard: React.FC<PlayerPrintableCardProps> = ({
               className="px-3.5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Exportar Excel</span>
+              <span>{language === 'en' ? 'Export Excel' : 'Exportar Excel'}</span>
             </button>
 
             {onClose && (
@@ -116,7 +121,7 @@ export const PlayerPrintableCard: React.FC<PlayerPrintableCardProps> = ({
                 onClick={onClose}
                 className="px-3 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 cursor-pointer"
               >
-                Cerrar
+                {t.common.close}
               </button>
             )}
           </div>
@@ -127,262 +132,266 @@ export const PlayerPrintableCard: React.FC<PlayerPrintableCardProps> = ({
       <div ref={cardContentRef} id={`player-card-${player.id || 'current'}`} className="space-y-4 sm:space-y-5 bg-white">
         {/* Official Club Header (always visible in print and view) */}
         <div data-avoid-break="true" className="flex items-center justify-between pb-3 border-b border-slate-200 print-avoid-break break-inside-avoid">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white shadow-sm overflow-hidden p-1">
-            {clubProfile.crestUrl ? (
-              <img
-                src={clubProfile.crestUrl}
-                alt={clubProfile.clubName}
-                className="w-full h-full object-contain bg-white rounded-lg p-0.5"
-              />
-            ) : (
-              <Shield className="w-6 h-6 stroke-[2.2]" />
-            )}
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-              {clubProfile.clubName || 'Ficha Inicial de Temporada'}
-            </h3>
-            <p className="text-[11px] text-slate-500 font-medium">
-              {clubProfile.subheading}
-            </p>
-          </div>
-        </div>
-        <span className="hidden sm:inline-flex text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">
-          Informe Técnico Oficial
-        </span>
-      </div>
-
-      {/* Header Profile Banner */}
-      <div data-avoid-break="true" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 print-avoid-break break-inside-avoid">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-red-100 border border-red-300 flex items-center justify-center text-red-600 font-mono text-2xl sm:text-3xl font-extrabold shrink-0">
-            {player.dorsal ? `#${player.dorsal}` : <User className="w-8 h-8" />}
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {player.fullName || 'Nombre no especificado'}
-              </h2>
-              {player.nickname && (
-                <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-                  "{player.nickname}"
-                </span>
-              )}
-            </div>
-            <p className="text-sm font-semibold text-slate-600 mt-0.5 flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-red-600" />
-              {player.position || 'Posición no definida'}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">
-              Tel: {player.phone || '-'} · Email: {player.email || '-'}
-            </p>
-          </div>
-        </div>
-
-        {/* Highlight Score Pill */}
-        <div className="flex items-center gap-3 self-end sm:self-center">
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold text-slate-500 block">Nivel de Ilusión</span>
-            <div className="text-2xl sm:text-3xl font-black text-red-600">
-              {player.illusionScore}<span className="text-xs font-normal text-slate-500">/10</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Grid of Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-        {/* Entorno y Familia */}
-        <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 print-avoid-break break-inside-avoid">
-          <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
-            <User className="w-4 h-4 text-red-600" />
-            <span>Entorno y Situación Personal</span>
-          </div>
-          <div className="space-y-1 text-slate-800">
-            <p>
-              <strong>¿Tiene pareja?:</strong>{' '}
-              {player.hasPartner === null ? (
-                'No indicado'
-              ) : player.hasPartner ? (
-                <span className="text-emerald-600 font-bold">Sí</span>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white shadow-sm overflow-hidden p-1">
+              {clubProfile.crestUrl ? (
+                <img
+                  src={clubProfile.crestUrl}
+                  alt={clubProfile.clubName}
+                  className="w-full h-full object-contain bg-white rounded-lg p-0.5"
+                />
               ) : (
-                <span className="text-red-600 font-bold">No</span>
+                <Shield className="w-6 h-6 stroke-[2.2]" />
               )}
-            </p>
-            <p>
-              <strong>Hijos:</strong>{' '}
-              {player.childrenCount === 0
-                ? '0'
-                : `${player.childrenCount === 3 ? '3 o más' : player.childrenCount} (${player.childrenAges || 'Edades no indicadas'})`}
-            </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                {clubProfile.clubName || (language === 'en' ? 'Initial Season Form' : 'Ficha Inicial de Temporada')}
+              </h3>
+              <p className="text-[11px] text-slate-500 font-medium">
+                {clubProfile.subheading}
+              </p>
+            </div>
           </div>
+          <span className="hidden sm:inline-flex text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">
+            {language === 'en' ? 'Official Technical Report' : 'Informe Técnico Oficial'}
+          </span>
         </div>
 
-        {/* Ayudas Externas */}
-        <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 print-avoid-break break-inside-avoid">
-          <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
-            <Activity className="w-4 h-4 text-red-600" />
-            <span>Ayudas y Profesionales Externos</span>
-          </div>
-          <div className="text-slate-800">
-            {player.externalHelps.length === 0 ? (
-              <span className="text-slate-500 italic">Ninguna reportada</span>
-            ) : (
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {player.externalHelps.map((h) => (
-                  <span
-                    key={h}
-                    className="px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-800 border border-red-200"
-                  >
-                    {h === 'Otros' && player.externalHelpOther ? `Otros: ${player.externalHelpOther}` : h}
+        {/* Header Profile Banner */}
+        <div data-avoid-break="true" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 print-avoid-break break-inside-avoid">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-red-100 border border-red-300 flex items-center justify-center text-red-600 font-mono text-2xl sm:text-3xl font-extrabold shrink-0">
+              {player.dorsal ? `#${player.dorsal}` : <User className="w-8 h-8" />}
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  {player.fullName || (language === 'en' ? 'Name not specified' : 'Nombre no especificado')}
+                </h2>
+                {player.nickname && (
+                  <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                    "{player.nickname}"
                   </span>
-                ))}
+                )}
               </div>
-            )}
+              <p className="text-sm font-semibold text-slate-600 mt-0.5 flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-red-600" />
+                {player.position ? translatePosition(player.position) : (language === 'en' ? 'Position not set' : 'Posición no definida')}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Tel: {player.phone || '-'} · Email: {player.email || '-'}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* ABP Rol Ofensivo y Defensivo */}
-        <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 md:col-span-2 print-avoid-break break-inside-avoid">
-          <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
-            <Target className="w-4 h-4 text-red-600" />
-            <span>Acciones a Balón Parado (ABP)</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Lanzador faltas/córners</span>
-              <strong className={player.abpOffensiveFoulsCorners ? 'text-emerald-600' : 'text-red-600'}>
-                {player.abpOffensiveFoulsCorners ? 'Sí' : 'No'}
-              </strong>
-            </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Rematador área</span>
-              <strong className={player.abpOffensiveHeader ? 'text-emerald-600' : 'text-red-600'}>
-                {player.abpOffensiveHeader ? 'Sí' : 'No'}
-              </strong>
-            </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Memoriza jugadas</span>
-              <strong className={player.abpMemorizePlays ? 'text-emerald-600' : 'text-red-600'}>
-                {player.abpMemorizePlays ? 'Sí' : 'No'}
-              </strong>
-            </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Marcaje hombre</span>
-              <strong className={player.abpDefensiveManMarking ? 'text-slate-800' : 'text-red-600'}>
-                {player.abpDefensiveManMarking ? 'Sí' : 'No'}
-              </strong>
-            </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Defensa en zona</span>
-              <strong className={player.abpDefensiveZone ? 'text-slate-800' : 'text-red-600'}>
-                {player.abpDefensiveZone ? 'Sí' : 'No'}
-              </strong>
+          {/* Highlight Score Pill */}
+          <div className="flex items-center gap-3 self-end sm:self-center">
+            <div className="text-right">
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                {language === 'en' ? 'Motivation Level' : 'Nivel de Ilusión'}
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-red-600">
+                {player.illusionScore}<span className="text-xs font-normal text-slate-500">/10</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Psicología y Rasgos */}
-        <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 print-avoid-break break-inside-avoid">
-          <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
-            <Sparkles className="w-4 h-4 text-red-600" />
-            <span>Personalidad y Mentalidad</span>
-          </div>
-          <div className="space-y-2 text-xs">
-            <div>
-              <span className="text-slate-500 font-semibold block">Rasgos positivos:</span>
-              <p className="text-slate-800">{player.positivePersonalityTraits || '-'}</p>
+        {/* Grid of Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+          {/* Entorno y Familia */}
+          <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 print-avoid-break break-inside-avoid">
+            <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
+              <User className="w-4 h-4 text-red-600" />
+              <span>{language === 'en' ? 'Personal & Family Background' : 'Entorno y Situación Personal'}</span>
             </div>
-            <div>
-              <span className="text-slate-500 font-semibold block">Aspectos a mejorar:</span>
-              <p className="text-slate-800">{player.personalityImprovementTraits || '-'}</p>
+            <div className="space-y-1 text-slate-800">
+              <p>
+                <strong>{language === 'en' ? 'Has partner?:' : '¿Tiene pareja?:'}</strong>{' '}
+                {player.hasPartner === null ? (
+                  language === 'en' ? 'Not indicated' : 'No indicado'
+                ) : player.hasPartner ? (
+                  <span className="text-emerald-600 font-bold">{t.common.yes}</span>
+                ) : (
+                  <span className="text-red-600 font-bold">{t.common.no}</span>
+                )}
+              </p>
+              <p>
+                <strong>{t.step1.childrenQuestion}:</strong>{' '}
+                {player.childrenCount === 0
+                  ? '0'
+                  : `${player.childrenCount === 3 ? (language === 'en' ? '3 or more' : '3 o más') : player.childrenCount} (${player.childrenAges || (language === 'en' ? 'Ages not indicated' : 'Edades no indicadas')})`}
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Aspecto Técnico-Táctico */}
-        <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 print-avoid-break break-inside-avoid">
-          <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
-            <Shield className="w-4 h-4 text-red-600" />
-            <span>Perfil Técnico-Táctico</span>
-          </div>
-          <div className="space-y-2 text-xs">
-            <div>
-              <span className="text-slate-500 font-semibold block">En lo que destaca:</span>
-              <p className="text-slate-800">{player.tacticalStrengths || '-'}</p>
+          {/* Ayudas Externas */}
+          <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 print-avoid-break break-inside-avoid">
+            <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
+              <Activity className="w-4 h-4 text-red-600" />
+              <span>{language === 'en' ? 'External Support & Professionals' : 'Ayudas y Profesionales Externos'}</span>
             </div>
-            <div>
-              <span className="text-slate-500 font-semibold block">A mejorar esta temporada:</span>
-              <p className="text-slate-800">{player.tacticalImprovements || '-'}</p>
+            <div className="text-slate-800">
+              {player.externalHelps.length === 0 ? (
+                <span className="text-slate-500 italic">{language === 'en' ? 'None reported' : 'Ninguna reportada'}</span>
+              ) : (
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {player.externalHelps.map((h) => (
+                    <span
+                      key={h}
+                      className="px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-800 border border-red-200"
+                    >
+                      {h === 'Otros' && player.externalHelpOther
+                        ? `${language === 'en' ? 'Other' : 'Otros'}: ${player.externalHelpOther}`
+                        : translateExternalHelp(h)}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Posicionamiento en Sistemas Tácticos (1-4-1-4-1 y 1-3-2-3-2) */}
-        <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 md:col-span-2 print-avoid-break break-inside-avoid">
-          <TacticalSystemSection
-            system4141Values={player.tacticalSystem4141 || {}}
-            system13232Values={player.tacticalSystem13232 || {}}
-            interactive={false}
-          />
-        </div>
+          {/* ABP Rol Ofensivo y Defensivo */}
+          <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 md:col-span-2 print-avoid-break break-inside-avoid">
+            <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
+              <Target className="w-4 h-4 text-red-600" />
+              <span>{t.step3.title}</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Set piece taker' : 'Lanzador faltas/córners'}</span>
+                <strong className={player.abpOffensiveFoulsCorners ? 'text-emerald-600' : 'text-red-600'}>
+                  {player.abpOffensiveFoulsCorners ? t.common.yes : t.common.no}
+                </strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Box header' : 'Rematador área'}</span>
+                <strong className={player.abpOffensiveHeader ? 'text-emerald-600' : 'text-red-600'}>
+                  {player.abpOffensiveHeader ? t.common.yes : t.common.no}
+                </strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Memorizes set plays' : 'Memoriza jugadas'}</span>
+                <strong className={player.abpMemorizePlays ? 'text-emerald-600' : 'text-red-600'}>
+                  {player.abpMemorizePlays ? t.common.yes : t.common.no}
+                </strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Man marker' : 'Marcaje hombre'}</span>
+                <strong className={player.abpDefensiveManMarking ? 'text-slate-800' : 'text-red-600'}>
+                  {player.abpDefensiveManMarking ? t.common.yes : t.common.no}
+                </strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Zonal defense' : 'Defensa en zona'}</span>
+                <strong className={player.abpDefensiveZone ? 'text-slate-800' : 'text-red-600'}>
+                  {player.abpDefensiveZone ? t.common.yes : t.common.no}
+                </strong>
+              </div>
+            </div>
+          </div>
 
-        {/* Compromiso y Hábitos */}
-        <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 md:col-span-2 print-avoid-break break-inside-avoid">
-          <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
-            <Compass className="w-4 h-4 text-red-600" />
-            <span>Métricas de Compromiso y Hábitos (Escala 0 a 10)</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">No titular</span>
-              <strong className="text-base text-red-600">{player.commitmentNotStarting}/10</strong>
+          {/* Psicología y Rasgos */}
+          <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 print-avoid-break break-inside-avoid">
+            <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
+              <Sparkles className="w-4 h-4 text-red-600" />
+              <span>{language === 'en' ? 'Personality & Mentality' : 'Personalidad y Mentalidad'}</span>
             </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Sustituido</span>
-              <strong className="text-base text-red-600">{player.commitmentSubstituted}/10</strong>
-            </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Campo</span>
-              <strong className="text-base text-red-600">{player.likePitchTraining}/10</strong>
-            </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Gimnasio</span>
-              <strong className="text-base text-red-600">{player.likeGymWork}/10</strong>
-            </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Cuidado pers.</span>
-              <strong className="text-base text-red-600">{player.likeSelfCare}/10</strong>
-            </div>
-            <div className="p-2 rounded bg-white border border-slate-200">
-              <span className="text-slate-500 block">Físico previo</span>
-              <strong className="text-base text-red-600">{player.physicalPreparationScore}/10</strong>
+            <div className="space-y-2 text-xs">
+              <div>
+                <span className="text-slate-500 font-semibold block">{language === 'en' ? 'Positive traits:' : 'Rasgos positivos:'}</span>
+                <p className="text-slate-800">{player.positivePersonalityTraits || '-'}</p>
+              </div>
+              <div>
+                <span className="text-slate-500 font-semibold block">{language === 'en' ? 'Areas to improve:' : 'Aspectos a mejorar:'}</span>
+                <p className="text-slate-800">{player.personalityImprovementTraits || '-'}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Metas e Inspiración */}
-        <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 md:col-span-2 print-avoid-break break-inside-avoid">
-          <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
-            <Trophy className="w-4 h-4 text-red-600" />
-            <span>Metas e Inspiración</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div>
-              <span className="text-slate-500 font-semibold block">Objetivo Individual:</span>
-              <p className="text-slate-800">{player.individualGoal || '-'}</p>
+          {/* Aspecto Técnico-Táctico */}
+          <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 print-avoid-break break-inside-avoid">
+            <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
+              <Shield className="w-4 h-4 text-red-600" />
+              <span>{language === 'en' ? 'Technical-Tactical Profile' : 'Perfil Técnico-Táctico'}</span>
             </div>
-            <div>
-              <span className="text-slate-500 font-semibold block">Objetivo Colectivo:</span>
-              <p className="text-slate-800">{player.collectiveGoal || '-'}</p>
-            </div>
-            <div>
-              <span className="text-slate-500 font-semibold block">Referente deportivo:</span>
-              <p className="text-slate-800 font-semibold">{player.favoriteAthleteReferent || '-'}</p>
+            <div className="space-y-2 text-xs">
+              <div>
+                <span className="text-slate-500 font-semibold block">{language === 'en' ? 'Strengths:' : 'En lo que destaca:'}</span>
+                <p className="text-slate-800">{player.tacticalStrengths || '-'}</p>
+              </div>
+              <div>
+                <span className="text-slate-500 font-semibold block">{language === 'en' ? 'Season improvement focus:' : 'A mejorar esta temporada:'}</span>
+                <p className="text-slate-800">{player.tacticalImprovements || '-'}</p>
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Posicionamiento en Sistemas Tácticos (1-4-1-4-1 y 1-3-2-3-2) */}
+          <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 md:col-span-2 print-avoid-break break-inside-avoid">
+            <TacticalSystemSection
+              system4141Values={player.tacticalSystem4141 || {}}
+              system13232Values={player.tacticalSystem13232 || {}}
+              interactive={false}
+            />
+          </div>
+
+          {/* Compromiso y Hábitos */}
+          <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 md:col-span-2 print-avoid-break break-inside-avoid">
+            <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
+              <Compass className="w-4 h-4 text-red-600" />
+              <span>{language === 'en' ? 'Commitment & Habit Metrics (Scale 0 to 10)' : 'Métricas de Compromiso y Hábitos (Escala 0 a 10)'}</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Bench role' : 'No titular'}</span>
+                <strong className="text-base text-red-600">{player.commitmentNotStarting}/10</strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Substituted' : 'Sustituido'}</span>
+                <strong className="text-base text-red-600">{player.commitmentSubstituted}/10</strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Pitch training' : 'Campo'}</span>
+                <strong className="text-base text-red-600">{player.likePitchTraining}/10</strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Gym strength' : 'Gimnasio'}</span>
+                <strong className="text-base text-red-600">{player.likeGymWork}/10</strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Self care' : 'Cuidado pers.'}</span>
+                <strong className="text-base text-red-600">{player.likeSelfCare}/10</strong>
+              </div>
+              <div className="p-2 rounded bg-white border border-slate-200">
+                <span className="text-slate-500 block">{language === 'en' ? 'Initial fitness' : 'Físico previo'}</span>
+                <strong className="text-base text-red-600">{player.physicalPreparationScore}/10</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Metas e Inspiración */}
+          <div data-avoid-break="true" className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2 md:col-span-2 print-avoid-break break-inside-avoid">
+            <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
+              <Trophy className="w-4 h-4 text-red-600" />
+              <span>{t.step6.title}</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div>
+                <span className="text-slate-500 font-semibold block">{t.step6.individualGoal}:</span>
+                <p className="text-slate-800">{player.individualGoal || '-'}</p>
+              </div>
+              <div>
+                <span className="text-slate-500 font-semibold block">{t.step6.collectiveGoal}:</span>
+                <p className="text-slate-800">{player.collectiveGoal || '-'}</p>
+              </div>
+              <div>
+                <span className="text-slate-500 font-semibold block">{t.step6.referent}:</span>
+                <p className="text-slate-800 font-semibold">{player.favoriteAthleteReferent || '-'}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

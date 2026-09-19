@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lock, KeyRound, Eye, EyeOff, X, ShieldAlert, Check, Loader2, RefreshCw } from 'lucide-react';
 import { getStaffPin, saveStaffPin } from '../utils/storage';
 import { fetchClubConfigFromSupabase } from '../utils/supabase';
+import { useLanguage } from '../context/LanguageContext';
 
 interface StaffPinModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t, language } = useLanguage();
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
@@ -67,7 +69,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
     const entered = pin.trim();
 
     if (!entered) {
-      setError('Por favor, introduce el PIN de acceso.');
+      setError(language === 'en' ? 'Please enter the access PIN.' : 'Por favor, introduce el PIN de acceso.');
       return;
     }
 
@@ -101,7 +103,11 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
     }
 
     setIsVerifying(false);
-    setError('PIN incorrecto. Si lo cambiaste recientemente, asegúrate de introducir el nuevo PIN.');
+    setError(
+      language === 'en'
+        ? 'Incorrect PIN. If changed recently, ensure you enter the new PIN.'
+        : 'PIN incorrecto. Si lo cambiaste recientemente, asegúrate de introducir el nuevo PIN.'
+    );
   };
 
   const handleChangePin = async (e: React.FormEvent) => {
@@ -111,7 +117,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
     const cleanConfirm = confirmNewPin.trim();
 
     if (!currentInput) {
-      setError('Introduce primero el PIN actual.');
+      setError(language === 'en' ? 'Enter current PIN first.' : 'Introduce primero el PIN actual.');
       return;
     }
 
@@ -131,17 +137,17 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
     }
 
     if (!isValidCurrent) {
-      setError('El PIN actual no es correcto.');
+      setError(language === 'en' ? 'Current PIN is incorrect.' : 'El PIN actual no es correcto.');
       return;
     }
 
     if (cleanNewPin.length < 4) {
-      setError('El nuevo PIN debe tener al menos 4 caracteres.');
+      setError(language === 'en' ? 'New PIN must have at least 4 characters.' : 'El nuevo PIN debe tener al menos 4 caracteres.');
       return;
     }
 
     if (cleanNewPin !== cleanConfirm) {
-      setError('Los nuevos PIN no coinciden.');
+      setError(language === 'en' ? 'New PINs do not match.' : 'Los nuevos PIN no coinciden.');
       return;
     }
 
@@ -149,7 +155,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
     setError('');
 
     try {
-      const savedOk = await saveStaffPin(cleanNewPin);
+      await saveStaffPin(cleanNewPin);
       setActivePin(cleanNewPin);
       setPinChangeSuccess(true);
 
@@ -163,7 +169,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
       }, 1400);
     } catch (err) {
       console.error('Error saving new PIN:', err);
-      setError('No se pudo guardar en la nube. Inténtalo de nuevo.');
+      setError(language === 'en' ? 'Could not save to cloud. Try again.' : 'No se pudo guardar en la nube. Inténtalo de nuevo.');
       setIsSaving(false);
     }
   };
@@ -178,8 +184,10 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Acceso al Cuerpo Técnico</h3>
-              <p className="text-xs text-slate-400">Protección de privacidad de la plantilla</p>
+              <h3 className="text-base font-bold text-white">{t.modals.staffPinTitle}</h3>
+              <p className="text-xs text-slate-400">
+                {language === 'en' ? 'Squad privacy protection' : 'Protección de privacidad de la plantilla'}
+              </p>
             </div>
           </div>
 
@@ -187,7 +195,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Cerrar"
+            title={t.common.close}
           >
             <X className="w-5 h-5" />
           </button>
@@ -198,7 +206,10 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
           <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
             <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <strong>Privacidad garantizada:</strong> Las fichas del resto de jugadores son confidenciales y solo pueden ser consultadas por el cuerpo técnico.
+              <strong>{language === 'en' ? 'Privacy guaranteed:' : 'Privacidad garantizada:'}</strong>{' '}
+              {language === 'en'
+                ? 'Player profiles are confidential and can only be consulted by the coaching staff.'
+                : 'Las fichas del resto de jugadores son confidenciales y solo pueden ser consultadas por el cuerpo técnico.'}
             </div>
           </div>
 
@@ -207,11 +218,11 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label htmlFor="staff-security-code-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    PIN de Seguridad del Cuerpo Técnico
+                    {language === 'en' ? 'Coaching Staff Security PIN' : 'PIN de Seguridad del Cuerpo Técnico'}
                   </label>
                   {isSyncingCloud && (
                     <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                      <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Sincronizando...
+                      <RefreshCw className="w-2.5 h-2.5 animate-spin" /> {language === 'en' ? 'Syncing...' : 'Sincronizando...'}
                     </span>
                   )}
                 </div>
@@ -230,7 +241,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                       setPin(e.target.value);
                       if (error) setError('');
                     }}
-                    placeholder="Introduce el PIN..."
+                    placeholder={t.modals.pinPlaceholder}
                     autoFocus
                     className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-center text-lg tracking-widest font-mono font-bold focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                   />
@@ -238,7 +249,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                     type="button"
                     onClick={() => setShowPin(!showPin)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                    title={showPin ? 'Ocultar PIN' : 'Ver PIN'}
+                    title={showPin ? (language === 'en' ? 'Hide PIN' : 'Ocultar PIN') : (language === 'en' ? 'Show PIN' : 'Ver PIN')}
                   >
                     {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -257,9 +268,11 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                     className="mt-0.5 w-4 h-4 rounded text-red-600 focus:ring-red-500 border-slate-300 cursor-pointer shrink-0"
                   />
                   <div className="text-xs text-slate-700">
-                    <span className="font-bold">Recordar acceso en este dispositivo</span>
+                    <span className="font-bold">{t.modals.rememberDevice}</span>
                     <p className="text-[11px] text-slate-500 font-normal leading-tight mt-0.5">
-                      Mantiene la sesión iniciada al abrir la aplicación en tu móvil o navegador.
+                      {language === 'en'
+                        ? 'Keeps your session active when opening the app on your mobile or browser.'
+                        : 'Mantiene la sesión iniciada al abrir la aplicación en tu móvil o navegador.'}
                     </p>
                   </div>
                 </label>
@@ -267,12 +280,15 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                 <div className="mt-2.5 text-center">
                   {activePin === '1234' ? (
                     <p className="text-[11px] text-slate-500">
-                      PIN inicial por defecto: <strong className="text-slate-800 font-mono">1234</strong>
+                      {language === 'en' ? 'Initial default PIN:' : 'PIN inicial por defecto:'}{' '}
+                      <strong className="text-slate-800 font-mono">1234</strong>
                     </p>
                   ) : (
                     <p className="text-[11px] text-emerald-700 font-medium inline-flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      PIN personalizado activo y sincronizado en la nube
+                      {language === 'en'
+                        ? 'Custom active PIN synced in the cloud'
+                        : 'PIN personalizado activo y sincronizado en la nube'}
                     </p>
                   )}
                 </div>
@@ -288,12 +304,12 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                   {isVerifying ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verificando...</span>
+                      <span>{language === 'en' ? 'Verifying...' : 'Verificando...'}</span>
                     </>
                   ) : (
                     <>
                       <KeyRound className="w-4 h-4" />
-                      <span>Entrar al Panel</span>
+                      <span>{t.modals.accessBtn}</span>
                     </>
                   )}
                 </button>
@@ -302,7 +318,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                   onClick={onClose}
                   className="py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all cursor-pointer"
                 >
-                  Cancelar
+                  {t.common.cancel}
                 </button>
               </div>
 
@@ -315,50 +331,54 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                   }}
                   className="text-xs text-slate-500 hover:text-red-600 font-medium underline cursor-pointer"
                 >
-                  ¿Deseas cambiar el PIN del cuerpo técnico?
+                  {t.modals.changePinBtn}
                 </button>
               </div>
             </form>
           ) : (
             <form onSubmit={handleChangePin} className="space-y-3">
               <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                <KeyRound className="w-4 h-4 text-red-600" /> Cambiar PIN del Cuerpo Técnico
+                <KeyRound className="w-4 h-4 text-red-600" /> {t.modals.changePinBtn}
               </h4>
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  PIN Actual
+                  {language === 'en' ? 'Current PIN' : 'PIN Actual'}
                 </label>
                 <input
                   type="password"
                   autoComplete="off"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  placeholder="PIN actual (o 1234 si es el primero)..."
+                  placeholder={language === 'en' ? 'Current PIN (or 1234 if first time)...' : 'PIN actual (o 1234 si es el primero)...'}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Nuevo PIN</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {t.modals.newPinLabel}
+                </label>
                 <input
                   type="password"
                   autoComplete="off"
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
-                  placeholder="Nuevo PIN (mínimo 4 caracteres)..."
+                  placeholder={t.modals.newPinLabel}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Confirmar Nuevo PIN</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {t.modals.confirmPinLabel}
+                </label>
                 <input
                   type="password"
                   autoComplete="off"
                   value={confirmNewPin}
                   onChange={(e) => setConfirmNewPin(e.target.value)}
-                  placeholder="Repite el nuevo PIN..."
+                  placeholder={t.modals.confirmPinLabel}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono"
                 />
               </div>
@@ -367,7 +387,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
               {pinChangeSuccess && (
                 <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>¡PIN guardado y sincronizado en la nube para móvil y web!</span>
+                  <span>{t.modals.pinChangedSuccess}</span>
                 </div>
               )}
 
@@ -380,10 +400,10 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                   {isSaving ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Guardando en la nube...</span>
+                      <span>{t.common.loading}</span>
                     </>
                   ) : (
-                    <span>Guardar Nuevo PIN</span>
+                    <span>{t.modals.saveNewPinBtn}</span>
                   )}
                 </button>
                 <button
@@ -394,7 +414,7 @@ export const StaffPinModal: React.FC<StaffPinModalProps> = ({
                   }}
                   className="py-2.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs cursor-pointer"
                 >
-                  Volver
+                  {t.nav.back}
                 </button>
               </div>
             </form>

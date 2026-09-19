@@ -11,6 +11,7 @@ import {
   Server,
 } from 'lucide-react';
 import { SUPABASE_URL, SUPABASE_SETUP_SQL, SupabaseStatus } from '../utils/supabase';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SupabaseModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
   onRefreshStatus,
   isChecking,
 }) => {
+  const { language } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   // Automatically check status whenever modal is opened
@@ -44,6 +46,8 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
     setTimeout(() => setCopied(false), 3000);
   };
 
+  const isEn = language === 'en';
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
       <div className="bg-white rounded-3xl border-2 border-emerald-500 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
@@ -55,22 +59,24 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <span>Base de Datos Supabase</span>
+                <span>{isEn ? 'Supabase Database' : 'Base de Datos Supabase'}</span>
                 {isChecking ? (
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1.5">
-                    <RefreshCw className="w-3 h-3 animate-spin" /> Verificando...
+                    <RefreshCw className="w-3 h-3 animate-spin" /> {isEn ? 'Verifying...' : 'Verificando...'}
                   </span>
                 ) : status?.tableExists ? (
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                    🟢 Activa ({status.count ?? 0} {status.count === 1 ? 'ficha' : 'fichas'})
+                    🟢 {isEn ? 'Active' : 'Activa'} ({status.count ?? 0} {isEn ? (status.count === 1 ? 'dossier' : 'dossiers') : (status.count === 1 ? 'ficha' : 'fichas')})
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    🟡 Tabla pendiente
+                    🟡 {isEn ? 'Pending table' : 'Tabla pendiente'}
                   </span>
                 )}
               </h3>
-              <p className="text-xs text-slate-400">Sincronización en la nube con tu proyecto Supabase</p>
+              <p className="text-xs text-slate-400">
+                {isEn ? 'Cloud synchronization with your Supabase project' : 'Sincronización en la nube con tu proyecto Supabase'}
+              </p>
             </div>
           </div>
 
@@ -78,7 +84,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Cerrar"
+            title={isEn ? 'Close' : 'Cerrar'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -107,20 +113,35 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
               <div>
                 <h4 className="text-sm font-bold">
                   {isChecking
-                    ? 'Comprobando conexión y estado de tablas...'
+                    ? isEn
+                      ? 'Checking connection and table status...'
+                      : 'Comprobando conexión y estado de tablas...'
                     : status?.tableExists
-                    ? `¡Conexión establecida y tabla activa! (${status.count ?? 0} fichas)`
+                    ? isEn
+                      ? `Connection established and table active! (${status.count ?? 0} records)`
+                      : `¡Conexión establecida y tabla activa! (${status.count ?? 0} fichas)`
+                    : isEn
+                    ? 'Supabase connected, table creation required'
                     : 'Supabase conectado, requiere crear las tablas'}
                 </h4>
                 <p className="text-xs text-slate-600 mt-0.5">
                   {isChecking
-                    ? 'Consultando la API REST de Supabase...'
+                    ? isEn
+                      ? 'Querying Supabase REST API...'
+                      : 'Consultando la API REST de Supabase...'
                     : status?.tableExists
-                    ? 'La tabla "players" existe y responde correctamente. Todas las fichas se guardan en la nube.'
-                    : status?.error || 'Abre el SQL Editor de Supabase y ejecuta el script de abajo.'}
+                    ? isEn
+                      ? 'The "players" table exists and responds properly. All forms are saved in the cloud.'
+                      : 'La tabla "players" existe y responde correctamente. Todas las fichas se guardan en la nube.'
+                    : status?.error ||
+                      (isEn
+                        ? 'Open Supabase SQL Editor and run the script below.'
+                        : 'Abre el SQL Editor de Supabase y ejecuta el script de abajo.')}
                 </p>
                 {status?.testedAt && (
-                  <p className="text-[10px] text-slate-400 mt-1">Última comprobación: {status.testedAt}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    {isEn ? 'Last checked:' : 'Última comprobación:'} {status.testedAt}
+                  </p>
                 )}
               </div>
             </div>
@@ -132,7 +153,15 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
               className="self-start sm:self-center px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 shrink-0 shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin text-emerald-600' : ''}`} />
-              <span>{isChecking ? 'Comprobando...' : 'Comprobar ahora'}</span>
+              <span>
+                {isChecking
+                  ? isEn
+                    ? 'Checking...'
+                    : 'Comprobando...'
+                  : isEn
+                  ? 'Check now'
+                  : 'Comprobar ahora'}
+              </span>
             </button>
           </div>
 
@@ -140,16 +169,18 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
             <div className="flex items-center gap-2 font-bold text-slate-700">
               <Server className="w-4 h-4 text-emerald-600" />
-              <span>Detalles del Proyecto Configurado</span>
+              <span>{isEn ? 'Configured Project Details' : 'Detalles del Proyecto Configurado'}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
               <div>
-                <span className="text-slate-500">URL del Proyecto:</span>
+                <span className="text-slate-500">{isEn ? 'Project URL:' : 'URL del Proyecto:'}</span>
                 <p className="font-mono font-semibold text-slate-800 break-all">{SUPABASE_URL}</p>
               </div>
               <div>
-                <span className="text-slate-500">Clave Pública (Anon):</span>
-                <p className="font-mono text-slate-600 truncate">Configurada correctamente (JWT activo)</p>
+                <span className="text-slate-500">{isEn ? 'Public Key (Anon):' : 'Clave Pública (Anon):'}</span>
+                <p className="font-mono text-slate-600 truncate">
+                  {isEn ? 'Properly configured (Active JWT)' : 'Configurada correctamente (JWT activo)'}
+                </p>
               </div>
             </div>
           </div>
@@ -158,9 +189,13 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h4 className="text-sm font-bold text-slate-900">Script SQL para crear la tabla "players"</h4>
+                <h4 className="text-sm font-bold text-slate-900">
+                  {isEn ? 'SQL Script to create the "players" table' : 'Script SQL para crear la tabla "players"'}
+                </h4>
                 <p className="text-xs text-slate-500">
-                  Copia y pega este script en el SQL Editor de tu panel de Supabase:
+                  {isEn
+                    ? 'Copy and paste this script in the SQL Editor of your Supabase dashboard:'
+                    : 'Copia y pega este script en el SQL Editor de tu panel de Supabase:'}
                 </p>
               </div>
 
@@ -172,7 +207,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                   className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Abrir SQL Editor</span>
+                  <span>{isEn ? 'Open SQL Editor' : 'Abrir SQL Editor'}</span>
                 </a>
 
                 <button
@@ -185,7 +220,15 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                   }`}
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? '¡Copiado!' : 'Copiar SQL'}</span>
+                  <span>
+                    {copied
+                      ? isEn
+                        ? 'Copied!'
+                        : '¡Copiado!'
+                      : isEn
+                      ? 'Copy SQL'
+                      : 'Copiar SQL'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -200,7 +243,10 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
           <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-xs flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
             <p className="leading-snug">
-              <strong>Respaldo híbrido:</strong> La aplicación siempre guarda una copia local instantánea en el dispositivo y sincroniza en segundo plano con Supabase. Incluso si no hay conexión temporal, no se perderá ninguna información.
+              <strong>{isEn ? 'Hybrid Backup:' : 'Respaldo híbrido:'}</strong>{' '}
+              {isEn
+                ? 'The application always saves an instantaneous local copy on device and syncs in the background with Supabase. Even in temporary offline states, no data is lost.'
+                : 'La aplicación siempre guarda una copia local instantánea en el dispositivo y sincroniza en segundo plano con Supabase. Incluso si no hay conexión temporal, no se perderá ninguna información.'}
             </p>
           </div>
         </div>
@@ -212,7 +258,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm cursor-pointer"
           >
-            Cerrar Ventana
+            {isEn ? 'Close Window' : 'Cerrar Ventana'}
           </button>
         </div>
       </div>

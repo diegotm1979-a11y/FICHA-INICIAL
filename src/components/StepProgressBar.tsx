@@ -1,6 +1,7 @@
 import React from 'react';
-import { FORM_STEPS, FormStep } from '../types';
+import { FormStep } from '../types';
 import { Check } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface StepProgressBarProps {
   currentStep: FormStep;
@@ -13,9 +14,25 @@ export const StepProgressBar: React.FC<StepProgressBarProps> = ({
   onSelectStep,
   maxStepVisited,
 }) => {
-  const currentMeta = FORM_STEPS.find((s) => s.step === currentStep);
-  const totalSteps = FORM_STEPS.length;
+  const { t } = useLanguage();
+
+  const stepsMeta = [
+    { step: 1 as FormStep, ...t.stepsMeta.step1 },
+    { step: 2 as FormStep, ...t.stepsMeta.step2 },
+    { step: 3 as FormStep, ...t.stepsMeta.step3 },
+    { step: 4 as FormStep, ...t.stepsMeta.step4 },
+    { step: 5 as FormStep, ...t.stepsMeta.step5 },
+    { step: 6 as FormStep, ...t.stepsMeta.step6 },
+    { step: 7 as FormStep, ...t.stepsMeta.step7 },
+  ];
+
+  const currentMeta = stepsMeta.find((s) => s.step === currentStep);
+  const totalSteps = stepsMeta.length;
   const progressPercent = Math.round(((currentStep - 1) / (totalSteps - 1)) * 100);
+
+  const stepOfLabel = t.nav.stepOf
+    .replace('{current}', String(currentStep))
+    .replace('{total}', String(totalSteps));
 
   return (
     <div className="w-full bg-white/95 backdrop-blur-md border-b border-red-200 sticky top-0 z-30 px-3 sm:px-6 py-3 no-print shadow-xs">
@@ -24,14 +41,14 @@ export const StepProgressBar: React.FC<StepProgressBarProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-              Paso {currentStep} de {totalSteps}
+              {stepOfLabel}
             </span>
             <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate max-w-[200px] sm:max-w-none">
               {currentMeta?.title}
             </h2>
           </div>
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-            <span className="text-red-600 font-bold">{progressPercent}%</span> completado
+            <span className="text-red-600 font-bold">{progressPercent}%</span> {t.nav.completed}
           </div>
         </div>
 
@@ -45,7 +62,7 @@ export const StepProgressBar: React.FC<StepProgressBarProps> = ({
 
         {/* Step chips for quick navigation on mobile and desktop */}
         <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto py-1 scrollbar-none">
-          {FORM_STEPS.map((s) => {
+          {stepsMeta.map((s) => {
             const isCurrent = s.step === currentStep;
             const isCompleted = s.step < currentStep;
             const canNavigate = s.step <= maxStepVisited || isCompleted;

@@ -7,6 +7,7 @@ import { savePlayerSubmission, deleteStoredPlayer, syncPlayersWithSupabase } fro
 import { checkSupabaseConnection, SupabaseStatus } from '../utils/supabase';
 import { ConfirmModal } from './ConfirmModal';
 import { SupabaseModal } from './SupabaseModal';
+import { useLanguage } from '../context/LanguageContext';
 import {
   Users,
   Search,
@@ -37,6 +38,19 @@ interface StaffDashboardProps {
   onOpenClubEditor?: () => void;
 }
 
+const POSITIONS = [
+  'Portero',
+  'Defensa Central',
+  'Lateral Derecho',
+  'Lateral Izquierdo',
+  'Pivote / Mediocentro Defensivo',
+  'Mediocentro Organizador',
+  'Mediapunta / Interior',
+  'Extremo Derecho',
+  'Extremo Izquierdo',
+  'Delantero Centro',
+];
+
 export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   players,
   onUpdatePlayers,
@@ -44,6 +58,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   onLockStaff,
   onOpenClubEditor,
 }) => {
+  const { t, language, translatePosition } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPosition, setFilterPosition] = useState('ALL');
   const [filterABP, setFilterABP] = useState('ALL');
@@ -71,10 +86,15 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     onUpdatePlayers(synced);
     setIsSyncingSupabase(false);
     if (source === 'supabase') {
-      setSyncFeedback('¡Sincronizado con Supabase con éxito!');
+      setSyncFeedback(language === 'en' ? 'Synchronized with Supabase successfully!' : '¡Sincronizado con Supabase con éxito!');
       setSupabaseStatus({ connected: true, tableExists: true, count: synced.length });
     } else {
-      setSyncFeedback(error || 'Usando base local. Verifica que hayas ejecutado el script SQL en Supabase.');
+      setSyncFeedback(
+        error ||
+          (language === 'en'
+            ? 'Using local storage. Check that the SQL script was executed in Supabase.'
+            : 'Usando base local. Verifica que hayas ejecutado el script SQL en Supabase.')
+      );
       setSupabaseStatus({ connected: true, tableExists: false, error });
     }
     setTimeout(() => setSyncFeedback(null), 5000);
@@ -176,13 +196,14 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-              Panel del Cuerpo Técnico
+              {t.staffDashboard.title}
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1 flex items-center gap-2.5">
             <Users className="w-7 h-7 text-red-600" />
-            Fichas Iniciales de la Plantilla
+            {language === 'en' ? 'Squad Initial Forms' : 'Fichas Iniciales de la Plantilla'}
           </h2>
+          <p className="text-xs text-slate-500 mt-0.5">{t.staffDashboard.subtitle}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
@@ -201,7 +222,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 ? 'bg-sky-50 text-sky-900 border-sky-300'
                 : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
             }`}
-            title="Base de datos Supabase: Ver estado y script SQL"
+            title={language === 'en' ? 'Supabase Database: View status and SQL script' : 'Base de datos Supabase: Ver estado y script SQL'}
           >
             <Database
               className={`w-4 h-4 ${
@@ -214,9 +235,15 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             />
             <span>
               {isCheckingSupabase
-                ? 'Comprobando...'
+                ? language === 'en'
+                  ? 'Checking...'
+                  : 'Comprobando...'
                 : supabaseStatus?.tableExists
-                ? `Supabase Conectado (${supabaseStatus.count ?? 0})`
+                ? language === 'en'
+                  ? `Supabase Connected (${supabaseStatus.count ?? 0})`
+                  : `Supabase Conectado (${supabaseStatus.count ?? 0})`
+                : language === 'en'
+                ? 'Supabase (SQL Script)'
                 : 'Supabase (Script SQL)'}
             </span>
           </button>
@@ -227,10 +254,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             onClick={handleSyncSupabase}
             disabled={isSyncingSupabase}
             className="px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer disabled:opacity-60"
-            title="Sincronizar fichas con la nube de Supabase"
+            title={language === 'en' ? 'Synchronize forms with Supabase cloud' : 'Sincronizar fichas con la nube de Supabase'}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncingSupabase ? 'animate-spin text-emerald-600' : 'text-slate-600'}`} />
-            <span>{isSyncingSupabase ? 'Sincronizando...' : 'Sincronizar'}</span>
+            <span>{isSyncingSupabase ? t.staffDashboard.syncing : t.staffDashboard.syncSupabase}</span>
           </button>
 
           <button
@@ -238,10 +265,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             id="staff-export-squad-pdf"
             onClick={() => setIsPdfModalOpen(true)}
             className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-red-600/20 transition-all active:scale-95 cursor-pointer"
-            title="Generar y descargar informe de la plantilla en PDF"
+            title={language === 'en' ? 'Generate and download squad PDF report' : 'Generar y descargar informe de la plantilla en PDF'}
           >
             <Printer className="w-4 h-4" />
-            <span>Exportar Plantilla (PDF)</span>
+            <span>{t.staffDashboard.exportDossier}</span>
           </button>
 
           <button
@@ -249,10 +276,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             id="staff-export-all-csv"
             onClick={() => exportPlayersToCSV(players)}
             className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
-            title="Descargar archivo Excel / CSV con todas las respuestas"
+            title={language === 'en' ? 'Download Excel / CSV file with all answers' : 'Descargar archivo Excel / CSV con todas las respuestas'}
           >
             <Download className="w-4 h-4 text-slate-600" />
-            <span>Exportar CSV / Excel</span>
+            <span>{t.staffDashboard.exportCsv}</span>
           </button>
 
           {onOpenClubEditor && (
@@ -261,10 +288,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               id="staff-open-club-editor"
               onClick={onOpenClubEditor}
               className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-              title="Configurar nombre del club y escudo oficial"
+              title={language === 'en' ? 'Configure club name and official crest' : 'Configurar nombre del club y escudo oficial'}
             >
               <Shield className="w-4 h-4 text-red-600" />
-              <span>Nombre y Escudo</span>
+              <span>{t.staffDashboard.clubBrandBtn}</span>
             </button>
           )}
 
@@ -274,7 +301,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             onClick={onBackToPlayerForm}
             className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-xs sm:text-sm transition-all shadow-2xs cursor-pointer"
           >
-            Volver a Formulario Jugador
+            {t.staffDashboard.backToForm}
           </button>
 
           {onLockStaff && (
@@ -283,10 +310,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               id="staff-lock-exit-btn"
               onClick={onLockStaff}
               className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-300 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-              title="Bloquear acceso al cuerpo técnico y volver al formulario"
+              title={language === 'en' ? 'Lock coaching staff access and return to player form' : 'Bloquear acceso al cuerpo técnico y volver al formulario'}
             >
               <Lock className="w-3.5 h-3.5 text-slate-600" />
-              <span>Bloquear / Salir</span>
+              <span>{t.staffDashboard.lockStaff}</span>
             </button>
           )}
         </div>
@@ -313,69 +340,79 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-slate-600 text-xs block font-semibold flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-red-600" />
-            Fichas Recibidas
+            {language === 'en' ? 'Forms Received' : 'Fichas Recibidas'}
           </span>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
             {stats.total}
           </div>
-          <span className="text-[11px] text-slate-500">Jugadores registrados</span>
+          <span className="text-[11px] text-slate-500">{t.staffDashboard.totalPlayers}</span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-slate-600 text-xs block font-semibold flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-red-600" />
-            Ilusión Media
+            {t.staffDashboard.avgIllusion}
           </span>
           <div className="text-2xl sm:text-3xl font-black text-red-600 mt-1">
             {stats.avgIllusion}
             <span className="text-xs text-slate-500 font-normal">/10</span>
           </div>
-          <span className="text-[11px] text-slate-500">Motivación inicial</span>
+          <span className="text-[11px] text-slate-500">
+            {language === 'en' ? 'Initial motivation' : 'Motivación inicial'}
+          </span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-slate-600 text-xs block font-semibold flex items-center gap-1.5">
             <Trophy className="w-3.5 h-3.5 text-amber-500" />
-            Compromiso Banquillo
+            {language === 'en' ? 'Bench Commitment' : 'Compromiso Banquillo'}
           </span>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
             {stats.avgCommitmentNotStarting}
             <span className="text-xs text-slate-500 font-normal">/10</span>
           </div>
-          <span className="text-[11px] text-slate-500">Si no es titular</span>
+          <span className="text-[11px] text-slate-500">
+            {language === 'en' ? 'If not starting' : 'Si no es titular'}
+          </span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-slate-600 text-xs block font-semibold flex items-center gap-1.5">
             <Target className="w-3.5 h-3.5 text-red-600" />
-            Lanzadores Faltas
+            {t.staffDashboard.abpTakers}
           </span>
           <div className="text-2xl sm:text-3xl font-black text-red-600 mt-1">
             {stats.freeKickTakers}
           </div>
-          <span className="text-[11px] text-slate-500">Especialistas ABP</span>
+          <span className="text-[11px] text-slate-500">
+            {language === 'en' ? 'Set piece specialists' : 'Especialistas ABP'}
+          </span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-slate-600 text-xs block font-semibold flex items-center gap-1.5">
             <Flame className="w-3.5 h-3.5 text-rose-600" />
-            Rematadores Área
+            {t.staffDashboard.headers}
           </span>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
             {stats.headers}
           </div>
-          <span className="text-[11px] text-slate-500">Juego aéreo ABP</span>
+          <span className="text-[11px] text-slate-500">
+            {language === 'en' ? 'Aerial set pieces' : 'Juego aéreo ABP'}
+          </span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-slate-600 text-xs block font-semibold flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5 text-red-600" />
-            Ayudas Externas
+            {t.staffDashboard.withExternalHelp}
           </span>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
             {stats.withExternalHelp}%
           </div>
-          <span className="text-[11px] text-slate-500">Nutri / Fisio / Coach</span>
+          <span className="text-[11px] text-slate-500">
+            {language === 'en' ? 'Nutri / Physio / Coach' : 'Nutri / Fisio / Coach'}
+          </span>
         </div>
       </div>
 
@@ -389,7 +426,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             id="staff-search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por jugador, apodo, dorsal o posición..."
+            placeholder={t.staffDashboard.searchPlaceholder}
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
           />
         </div>
@@ -403,17 +440,12 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             onChange={(e) => setFilterPosition(e.target.value)}
             className="bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-red-500"
           >
-            <option value="ALL">Todas las posiciones</option>
-            <option value="Portero">Portero</option>
-            <option value="Defensa Central">Defensa Central</option>
-            <option value="Lateral Derecho">Lateral Derecho</option>
-            <option value="Lateral Izquierdo">Lateral Izquierdo</option>
-            <option value="Pivote / Mediocentro Defensivo">Pivote / Mediocentro Defensivo</option>
-            <option value="Mediocentro Organizador">Mediocentro Organizador</option>
-            <option value="Mediapunta / Interior">Mediapunta / Interior</option>
-            <option value="Extremo Derecho">Extremo Derecho</option>
-            <option value="Extremo Izquierdo">Extremo Izquierdo</option>
-            <option value="Delantero Centro">Delantero Centro</option>
+            <option value="ALL">{t.staffDashboard.allPositions}</option>
+            {POSITIONS.map((pos) => (
+              <option key={pos} value={pos}>
+                {translatePosition(pos)}
+              </option>
+            ))}
           </select>
 
           {/* ABP filter */}
@@ -423,11 +455,19 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             onChange={(e) => setFilterABP(e.target.value)}
             className="bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-red-500"
           >
-            <option value="ALL">Todos los perfiles ABP</option>
-            <option value="FOULS">Lanzador Faltas/Córners</option>
-            <option value="HEADERS">Rematador de Área</option>
-            <option value="ZONE">Defensor en Zona</option>
-            <option value="MAN">Marcador al Hombre</option>
+            <option value="ALL">{t.staffDashboard.allABP}</option>
+            <option value="FOULS">
+              {language === 'en' ? 'Set Piece / Corner Taker' : 'Lanzador Faltas/Córners'}
+            </option>
+            <option value="HEADERS">
+              {language === 'en' ? 'Box Header' : 'Rematador de Área'}
+            </option>
+            <option value="ZONE">
+              {language === 'en' ? 'Zonal Defender' : 'Defensor en Zona'}
+            </option>
+            <option value="MAN">
+              {language === 'en' ? 'Man Marker' : 'Marcador al Hombre'}
+            </option>
           </select>
         </div>
       </div>
@@ -436,8 +476,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
       {filteredPlayers.length === 0 ? (
         <div className="text-center py-12 p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-300 space-y-2">
           <Users className="w-10 h-10 text-slate-400 mx-auto" />
-          <p className="text-base font-semibold text-slate-700">No se encontraron fichas con los filtros actuales.</p>
-          <p className="text-xs text-slate-500">Prueba a limpiar la búsqueda o cambiar el filtro de posición.</p>
+          <p className="text-base font-semibold text-slate-700">{t.staffDashboard.noPlayersTitle}</p>
+          <p className="text-xs text-slate-500">{t.staffDashboard.noPlayersSubtitle}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -458,13 +498,15 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                         {player.fullName}
                       </h4>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        {player.position} {player.nickname ? `("${player.nickname}")` : ''}
+                        {player.position ? translatePosition(player.position) : ''} {player.nickname ? `("${player.nickname}")` : ''}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Ilusión</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                      {language === 'en' ? 'Illusion' : 'Ilusión'}
+                    </span>
                     <span className="text-lg font-black text-red-600">{player.illusionScore}/10</span>
                   </div>
                 </div>
@@ -472,30 +514,38 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 {/* Key indicators */}
                 <div className="grid grid-cols-3 gap-2 text-center text-[11px] pt-1 border-t border-slate-100">
                   <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">No titular</span>
+                    <span className="text-slate-500 block text-[10px]">
+                      {language === 'en' ? 'Bench role' : 'No titular'}
+                    </span>
                     <span className="font-bold text-slate-800">{player.commitmentNotStarting}/10</span>
                   </div>
                   <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">Físico prev.</span>
+                    <span className="text-slate-500 block text-[10px]">
+                      {language === 'en' ? 'Fitness' : 'Físico prev.'}
+                    </span>
                     <span className="font-bold text-slate-800">{player.physicalPreparationScore}/10</span>
                   </div>
                   <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">ABP Ofensivo</span>
+                    <span className="text-slate-500 block text-[10px]">ABP</span>
                     <span className="font-bold text-red-600">
-                      {player.abpOffensiveFoulsCorners ? 'Lanza' : player.abpOffensiveHeader ? 'Remata' : 'Apoyo'}
+                      {player.abpOffensiveFoulsCorners
+                        ? t.success.roleTaker
+                        : player.abpOffensiveHeader
+                        ? t.success.roleHeader
+                        : t.success.roleSupport}
                     </span>
                   </div>
                 </div>
 
                 {/* Goal snippet */}
                 <div className="text-xs text-slate-600 line-clamp-2 italic bg-slate-50 p-2 rounded-lg border border-slate-200">
-                  "{player.individualGoal || 'Sin objetivo individual especificado'}"
+                  "{player.individualGoal || (language === 'en' ? 'No individual goal specified' : 'Sin objetivo individual especificado')}"
                 </div>
 
                 {/* Coach staff note badge if exists */}
                 {player.staffNotes && (
                   <div className="text-[11px] text-amber-900 bg-amber-50 border border-amber-300 p-2 rounded-lg line-clamp-2">
-                    <strong>Nota Cuerpo Técnico:</strong> {player.staffNotes}
+                    <strong>{language === 'en' ? 'Staff Note:' : 'Nota Cuerpo Técnico:'}</strong> {player.staffNotes}
                   </div>
                 )}
               </div>
@@ -509,14 +559,14 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                   className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-red-600 hover:text-white text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>Ver Ficha Completa</span>
+                  <span>{t.staffDashboard.viewCard}</span>
                 </button>
 
                 <button
                   type="button"
                   id={`delete-player-btn-${player.id}`}
                   onClick={() => handleDelete(player.id, player.fullName)}
-                  title="Eliminar ficha"
+                  title={t.staffDashboard.deletePlayer}
                   className="p-2 rounded-xl bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-500 border border-slate-200 transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -534,7 +584,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             <div className="flex items-center justify-between border-b border-slate-200 pb-4 no-print print:hidden">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-                  Dossier Técnico Detallado
+                  {language === 'en' ? 'Detailed Technical Dossier' : 'Dossier Técnico Detallado'}
                 </span>
                 <span className="text-sm font-bold text-slate-900">{selectedPlayer.fullName}</span>
               </div>
@@ -543,6 +593,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 id="modal-close-btn"
                 onClick={() => setSelectedPlayer(null)}
                 className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer"
+                title={t.common.close}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -556,7 +607,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               <div className="flex items-center justify-between">
                 <label htmlFor="staffNotes" className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-red-600" />
-                  Notas Privadas del Cuerpo Técnico
+                  {t.staffDashboard.coachNotes}
                 </label>
                 <button
                   type="button"
@@ -565,7 +616,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                   className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  <span>Guardar Nota</span>
+                  <span>{t.staffDashboard.saveNotes}</span>
                 </button>
               </div>
               <textarea
@@ -573,11 +624,17 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 rows={3}
                 value={editingNotes}
                 onChange={(e) => setEditingNotes(e.target.value)}
-                placeholder="Anotaciones técnicas, impresiones tras entrevista personal, rol asignado en ABP o pautas de preparación física..."
+                placeholder={
+                  language === 'en'
+                    ? 'Technical annotations, impressions from personal interview, tactical roles or physical guidelines...'
+                    : 'Anotaciones técnicas, impresiones tras entrevista personal, rol asignado en ABP o pautas de preparación física...'
+                }
                 className="w-full p-3 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs sm:text-sm placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
               />
               <p className="text-[11px] text-slate-500">
-                Estas notas solo son visibles por el cuerpo técnico y se guardan junto a la ficha del jugador.
+                {language === 'en'
+                  ? 'These notes are only visible to the coaching staff and are saved with the player dossier.'
+                  : 'Estas notas solo son visibles por el cuerpo técnico y se guardan junto a la ficha del jugador.'}
               </p>
             </div>
           </div>
@@ -587,10 +644,14 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
       {/* Delete Player Confirmation Modal */}
       <ConfirmModal
         isOpen={Boolean(playerToDelete)}
-        title="¿Eliminar ficha de jugador?"
-        message={`¿Estás seguro de que deseas eliminar la ficha de "${playerToDelete?.name}"? Esta información se eliminará del registro local del cuerpo técnico.`}
-        confirmLabel="Eliminar ficha"
-        cancelLabel="Cancelar"
+        title={t.staffDashboard.deleteConfirmTitle}
+        message={
+          playerToDelete
+            ? t.staffDashboard.deleteConfirmMessage(playerToDelete.name)
+            : ''
+        }
+        confirmLabel={t.staffDashboard.deleteConfirmBtn}
+        cancelLabel={t.common.cancel}
         variant="danger"
         onConfirm={handleConfirmDelete}
         onCancel={() => setPlayerToDelete(null)}

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ClubProfile, DEFAULT_CLUB_PROFILE } from '../types';
+import { ClubProfile } from '../types';
 import {
   Shield,
   Upload,
@@ -7,9 +7,9 @@ import {
   X,
   Check,
   RotateCcw,
-  Image as ImageIcon,
   Building2,
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ClubBadgeEditorModalProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
   currentProfile,
   onSave,
 }) => {
+  const { t, language } = useLanguage();
   const [clubName, setClubName] = useState(currentProfile.clubName);
   const [subheading, setSubheading] = useState(currentProfile.subheading);
   const [crestUrl, setCrestUrl] = useState<string | null>(currentProfile.crestUrl);
@@ -38,11 +39,19 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
   const handleFile = (file: File) => {
     setUploadError(null);
     if (!file.type.startsWith('image/')) {
-      setUploadError('Por favor selecciona un archivo de imagen válido (PNG, JPG, SVG, WEBP).');
+      setUploadError(
+        language === 'en'
+          ? 'Please select a valid image file (PNG, JPG, SVG, WEBP).'
+          : 'Por favor selecciona un archivo de imagen válido (PNG, JPG, SVG, WEBP).'
+      );
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError('La imagen es demasiado grande. Tamaño máximo recomendado: 5 MB.');
+      setUploadError(
+        language === 'en'
+          ? 'Image is too large. Max recommended size: 5 MB.'
+          : 'La imagen es demasiado grande. Tamaño máximo recomendado: 5 MB.'
+      );
       return;
     }
 
@@ -54,7 +63,11 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
       }
     };
     reader.onerror = () => {
-      setUploadError('Error al leer el archivo. Inténtalo de nuevo.');
+      setUploadError(
+        language === 'en'
+          ? 'Error reading file. Please try again.'
+          : 'Error al leer el archivo. Inténtalo de nuevo.'
+      );
     };
     reader.readAsDataURL(file);
   };
@@ -87,7 +100,11 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
 
   const handleResetToDefault = () => {
     setClubName('');
-    setSubheading('Ficha Inicial de Temporada · Cuerpo Técnico');
+    setSubheading(
+      language === 'en'
+        ? 'Season Initial Form · Coaching Staff'
+        : 'Ficha Inicial de Temporada · Cuerpo Técnico'
+    );
     setCrestUrl(null);
     setUploadError(null);
   };
@@ -95,7 +112,11 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
   const handleSave = () => {
     onSave({
       clubName: clubName.trim(),
-      subheading: subheading.trim() || 'Ficha Inicial de Temporada · Cuerpo Técnico',
+      subheading:
+        subheading.trim() ||
+        (language === 'en'
+          ? 'Season Initial Form · Coaching Staff'
+          : 'Ficha Inicial de Temporada · Cuerpo Técnico'),
       crestUrl,
     });
     onClose();
@@ -118,17 +139,17 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold tracking-tight text-white leading-snug">
-                Escudo e Identidad del Club
+                {t.modals.clubEditorTitle}
               </h3>
               <p className="text-[11px] text-red-100">
-                Personaliza el escudo oficial que aparecerá en la cabecera e informes
+                {t.modals.clubEditorSubtitle}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar ventana"
+            aria-label={t.common.close}
             className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -144,7 +165,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
                 {crestUrl ? (
                   <img
                     src={crestUrl}
-                    alt="Escudo del Club"
+                    alt={t.modals.crestLabel}
                     className="w-full h-full object-contain p-1 bg-white"
                   />
                 ) : (
@@ -155,7 +176,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setCrestUrl(null)}
-                  title="Quitar escudo y volver al icono por defecto"
+                  title={language === 'en' ? 'Remove crest' : 'Quitar escudo'}
                   className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-xs border border-white cursor-pointer"
                 >
                   <X className="w-3 h-3" />
@@ -165,13 +186,13 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
 
             <div className="min-w-0 flex-1">
               <span className="text-[10px] font-extrabold text-red-600 uppercase tracking-wider block">
-                Previsualización
+                {language === 'en' ? 'Live Preview' : 'Previsualización'}
               </span>
               <h4 className="text-base font-black text-slate-900 truncate">
-                {clubName || 'Ficha Inicial de Temporada'}
+                {clubName || (language === 'en' ? 'Initial Season Form' : 'Ficha Inicial de Temporada')}
               </h4>
               <p className="text-xs text-slate-500 truncate">
-                {subheading || 'Información y Compromiso del Futbolista · Cuerpo Técnico'}
+                {subheading || (language === 'en' ? 'Player Information & Commitment · Coaching Staff' : 'Información y Compromiso del Futbolista · Cuerpo Técnico')}
               </p>
             </div>
           </div>
@@ -179,7 +200,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
           {/* Upload Drop Zone */}
           <div>
             <label className="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">
-              1. Subir Imagen del Escudo
+              1. {t.modals.crestLabel}
             </label>
 
             <div
@@ -211,10 +232,10 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-900">
-                    Haz clic para elegir el escudo o arrastra el archivo aquí
+                    {t.modals.dragOrBrowse}
                   </p>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    Formatos: PNG transparente, SVG, JPG o WebP (máx. 5 MB)
+                    PNG, SVG, JPG, WebP (max 5 MB)
                   </p>
                 </div>
               </div>
@@ -230,7 +251,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
           {/* Alternative: Image URL */}
           <div>
             <label className="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1.5">
-              O introducir enlace directo a la imagen
+              {t.modals.orUrl}
             </label>
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
@@ -239,7 +260,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
                 </div>
                 <input
                   type="url"
-                  placeholder="https://ejemplo.com/escudo-club.png"
+                  placeholder={t.modals.urlPlaceholder}
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -257,7 +278,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
                 disabled={!urlInput.trim()}
                 className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
-                Aplicar
+                {language === 'en' ? 'Apply' : 'Aplicar'}
               </button>
             </div>
           </div>
@@ -265,12 +286,12 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
           {/* Club Name & Subheading Optional Fields */}
           <div className="space-y-3 pt-2 border-t border-slate-200">
             <label className="block text-xs font-bold text-slate-800 uppercase tracking-wide">
-              2. Datos del Club o Categoría
+              2. {language === 'en' ? 'Club & Category Information' : 'Datos del Club o Categoría'}
             </label>
 
             <div>
               <span className="text-[11px] font-semibold text-slate-600 block mb-1">
-                Nombre del Club o Título
+                {t.modals.clubNameLabel}
               </span>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -280,7 +301,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
                   type="text"
                   value={clubName}
                   onChange={(e) => setClubName(e.target.value)}
-                  placeholder="Escribe el nombre del club cuando lo desees..."
+                  placeholder={t.modals.clubNamePlaceholder}
                   className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
                 />
               </div>
@@ -288,7 +309,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
 
             <div>
               <span className="text-[11px] font-semibold text-slate-600 block mb-1">
-                Subtítulo / Categoría
+                {t.modals.subheadingLabel}
               </span>
               <input
                 type="text"
@@ -309,7 +330,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
             className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Restablecer</span>
+            <span>{t.modals.resetDefault}</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -318,7 +339,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
               onClick={onClose}
               className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 cursor-pointer transition-colors"
             >
-              Cancelar
+              {t.common.cancel}
             </button>
 
             <button
@@ -327,7 +348,7 @@ export const ClubBadgeEditorModal: React.FC<ClubBadgeEditorModalProps> = ({
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 shadow-sm shadow-red-600/30 cursor-pointer transition-all active:scale-95"
             >
               <Check className="w-4 h-4" />
-              <span>Guardar Escudo</span>
+              <span>{t.modals.saveChanges}</span>
             </button>
           </div>
         </div>

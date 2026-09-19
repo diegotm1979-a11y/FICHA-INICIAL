@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PlayerData } from '../types';
 import { findPlayerForEdit } from '../utils/storage';
+import { useLanguage } from '../context/LanguageContext';
 import { UserCheck, Search, X, AlertCircle, ShieldCheck, ArrowRight } from 'lucide-react';
 
 interface PlayerEditLookupModalProps {
@@ -14,6 +15,7 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
   onClose,
   onPlayerLoaded,
 }) => {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [phoneOrDorsal, setPhoneOrDorsal] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -24,11 +26,11 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
   const handleLookup = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setErrorMessage('Introduce tu nombre o apodo para localizar tu ficha.');
+      setErrorMessage(t.modals.editLookupErrorName);
       return;
     }
     if (!phoneOrDorsal.trim()) {
-      setErrorMessage('Introduce tu teléfono de contacto o tu dorsal para verificar tu identidad.');
+      setErrorMessage(t.modals.editLookupErrorPhone);
       return;
     }
 
@@ -45,9 +47,7 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
         setName('');
         setPhoneOrDorsal('');
       } else {
-        setErrorMessage(
-          'No se encontró ninguna ficha con esos datos. Comprueba que el nombre y el teléfono o dorsal coincidan con los que introdujiste al enviar tu ficha.'
-        );
+        setErrorMessage(t.modals.editLookupNotFound);
       }
     }, 300);
   };
@@ -62,8 +62,8 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
               <UserCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Editar mi Ficha de Jugador</h3>
-              <p className="text-xs text-slate-400">Recupera tu propia ficha de forma segura</p>
+              <h3 className="text-base font-bold text-white">{t.modals.editLookupTitle}</h3>
+              <p className="text-xs text-slate-400">{t.modals.editLookupSubtitle}</p>
             </div>
           </div>
 
@@ -71,7 +71,7 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Cerrar"
+            title={t.common.close}
           >
             <X className="w-5 h-5" />
           </button>
@@ -81,15 +81,13 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
         <div className="p-6 space-y-4">
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-            <p>
-              Por privacidad hacia tus compañeros, únicamente podrás acceder a tu propia ficha. Introduce tus datos de identificación para cargarla en el formulario.
-            </p>
+            <p>{t.modals.editLookupPrivacy}</p>
           </div>
 
           <form onSubmit={handleLookup} className="space-y-4">
             <div>
               <label htmlFor="lookup-player-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Tu Nombre completo o Apodo deportivo
+                {t.modals.editLookupNameLabel}
               </label>
               <input
                 id="lookup-player-name"
@@ -99,7 +97,7 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
                   setName(e.target.value);
                   if (errorMessage) setErrorMessage('');
                 }}
-                placeholder="Ej: Carlos García o 'Carli'"
+                placeholder={t.modals.editLookupNamePlaceholder}
                 autoFocus
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
               />
@@ -107,7 +105,7 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
 
             <div>
               <label htmlFor="lookup-player-phone" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Tu Teléfono de contacto o Dorsal
+                {t.modals.editLookupPhoneLabel}
               </label>
               <input
                 id="lookup-player-phone"
@@ -117,11 +115,11 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
                   setPhoneOrDorsal(e.target.value);
                   if (errorMessage) setErrorMessage('');
                 }}
-                placeholder="Ej: 612345678 o 10"
+                placeholder={t.modals.editLookupPhonePlaceholder}
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
               />
               <p className="text-[11px] text-slate-500 mt-1">
-                Utilizado para verificar que la ficha te pertenece.
+                {t.modals.editLookupPhoneHelp}
               </p>
             </div>
 
@@ -140,11 +138,11 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
                 className="flex-1 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-md shadow-red-600/20 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSearching ? (
-                  <span>Buscando tu ficha...</span>
+                  <span>{t.modals.editLookupSearching}</span>
                 ) : (
                   <>
                     <Search className="w-4 h-4" />
-                    <span>Cargar mi ficha para editar</span>
+                    <span>{t.modals.editLookupSubmit}</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -155,7 +153,7 @@ export const PlayerEditLookupModal: React.FC<PlayerEditLookupModalProps> = ({
                 onClick={onClose}
                 className="py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all cursor-pointer"
               >
-                Cancelar
+                {t.common.cancel}
               </button>
             </div>
           </form>

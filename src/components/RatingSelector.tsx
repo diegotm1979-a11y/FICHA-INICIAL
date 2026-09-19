@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface RatingSelectorProps {
   id?: string;
@@ -20,10 +21,14 @@ export const RatingSelector: React.FC<RatingSelectorProps> = ({
   max = 10,
   label,
   sublabel,
-  lowLabel = 'Mínimo (0)',
-  highLabel = 'Máximo (10)',
+  lowLabel,
+  highLabel,
 }) => {
+  const { t } = useLanguage();
   const values = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+
+  const displayLowLabel = lowLabel !== undefined ? lowLabel : `${t.common.cancel ? '0' : '0'}`;
+  const displayHighLabel = highLabel !== undefined ? highLabel : '10';
 
   return (
     <div id={id} className="space-y-2.5">
@@ -31,7 +36,7 @@ export const RatingSelector: React.FC<RatingSelectorProps> = ({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           {label && <label className="text-sm sm:text-base font-semibold text-slate-900">{label}</label>}
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-            Puntuación: <span className="ml-1.5 text-sm text-red-700 font-black">{value}</span> / {max}
+            {t.step5.scorePrefix}: <span className="ml-1.5 text-sm text-red-700 font-black">{value}</span> / {max}
           </span>
         </div>
       )}
@@ -59,8 +64,8 @@ export const RatingSelector: React.FC<RatingSelectorProps> = ({
       </div>
 
       <div className="flex justify-between items-center text-[11px] sm:text-xs text-slate-500 font-medium px-1">
-        <span>{lowLabel}</span>
-        <span>{highLabel}</span>
+        <span>{displayLowLabel}</span>
+        <span>{displayHighLabel}</span>
       </div>
     </div>
   );
